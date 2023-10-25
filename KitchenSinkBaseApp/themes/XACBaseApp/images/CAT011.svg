@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="36" height="36" viewBox="0 0 36 36">
+  <defs>
+    <clipPath id="clip-path">
+      <rect id="Rectangle_4132" data-name="Rectangle 4132" width="20" height="20"/>
+    </clipPath>
+  </defs>
+  <g id="Group_4311" data-name="Group 4311" transform="translate(-504 -577)">
+    <g id="Ellipse_342" data-name="Ellipse 342" transform="translate(504 577)" fill="none" stroke="#e7e8ed" stroke-width="1">
+      <circle cx="18" cy="18" r="18" stroke="none"/>
+      <circle cx="18" cy="18" r="17.5" fill="none"/>
+    </g>
+    <g id="a" transform="translate(512 584)" clip-path="url(#clip-path)">
+      <path id="Path_9234" data-name="Path 9234" d="M8.233,11.146H7.122a.278.278,0,0,1-.278-.278V6.98a.278.278,0,0,1,.278-.28H8.233a.278.278,0,0,1,.278.278v3.889a.278.278,0,0,1-.278.279Z" transform="translate(-3.042 -2.979)" fill="#a0041e"/>
+      <path id="Path_9235" data-name="Path 9235" d="M5,10.222,12.222,3l7.222,7.222v9.444H5Z" transform="translate(-2.222 -1.333)" fill="#ffe8b6"/>
+      <path id="Path_9236" data-name="Path 9236" d="M18,16h.556v8.889H18Z" transform="translate(-8 -7.111)" fill="#ffcc4d"/>
+      <path id="Path_9237" data-name="Path 9237" d="M19,10.333a.554.554,0,0,1-.393-.163L11.778,3.341,4.948,10.17a.556.556,0,0,1-.786-.786l7.222-7.222a.555.555,0,0,1,.786,0l7.222,7.222a.555.555,0,0,1-.393.948Z" transform="translate(-1.778 -0.889)" fill="#66757f"/>
+      <path id="Path_9238" data-name="Path 9238" d="M17.555,13.222a.555.555,0,0,1-.393-.948l3.611-3.611a.556.556,0,0,1,.786.786L17.948,13.06a.554.554,0,0,1-.393.163Z" transform="translate(-7.555 -3.778)" fill="#66757f"/>
+      <path id="Path_9239" data-name="Path 9239" d="M10,26h2.222v3.333H10Z" transform="translate(-4.444 -11.556)" fill="#c1694f"/>
+      <path id="Path_9240" data-name="Path 9240" d="M10,17h2.222v2.222H10Zm6.944,0h2.222v2.222H16.944Zm0,5h2.222v2.222H16.944Z" transform="translate(-4.444 -7.556)" fill="#55acee"/>
+      <path id="Path_9241" data-name="Path 9241" d="M19.722,32.833a.833.833,0,0,1-.833.833H3.333a.833.833,0,0,1,0-1.667H18.889a.833.833,0,0,1,.833.834Z" transform="translate(-1.111 -14.222)" fill="#5c913b"/>
+      <rect id="Rectangle_4131" data-name="Rectangle 4131" width="20" height="20" fill="rgba(0,0,0,0)"/>
+    </g>
+  </g>
+</svg>

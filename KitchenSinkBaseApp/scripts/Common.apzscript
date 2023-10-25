@@ -1,0 +1,1289 @@
+window.pageBC = "";
+window.todayDate = "";
+window.preLoginPageBC = "";
+var ALLOWONLYNUM = /[^0-9]/g,
+    ACCALLOWONLYNUM = /[^0-9 ]/g,
+    ALPHANUMERIC = /[^a-zA-Z\u0400-\u04FF\.\,\ ]/g,
+    ALPHANUMERICFIRSTANDLASTNAME = /[^а-яӨЁҮ\&_\!\,\?\%\&\.\#\$\:\^\*\<\>\-\_ .-]/i,
+    ALPHANUMERICMONG = /[^a-zA-Z0-9 ]/g,
+    NOTALLOWMONGOLIAN = /[^a-zA-Z\.\,\ ]/g,
+    ALPHANUMERICONLY = /[^a-zA-Z0-9]/g,
+    NOTALLOWMONGOL = /[^a-zA-Z0-9\!\,\.\#\$\:\^\*\<\>\-\_ ]/g,
+    ALLOWALPHA = /[^a-zA-Z\\,\.\u0400-\u04FF]/g,
+    ALLOWALPHASPL = /[^a-zA-Z0-9\u0400-\u04FF\!\,\.\#\$\:\^\*\<\>\-\_ ]/g,
+    ALLOWSWIFTPATTERN = /[^a-zA-Z0-9\.\,\-\(\)\/\=\'\+\:\?\!\"\%\&\*\<\>\; ]/g,
+    USERIDPASS = /[^a-zA-Z0-9|!\@\!\,\.\#\$\:\^\*\<\>\-\&\%\(\)\?\_]/g,
+    ALLOWNUMBERDECIMALS = /^\d*\.?\d*$/,
+    MAX_LEN = 16,
+    NATIONID_MAX_LEN = 11,
+    ACC_MAX_LEN = 19,
+    WIT_ACC_MAX_LEN = 12,
+    MOB_MAX_LEN = 9,
+    CUST_ID_LEN = 12,
+    ALPHA_MAX_LEN = 50,
+    ADDR_MAX_LEN = 40,
+    IFSC_MAX_LEN = 11,
+    NEFT_IMPS_MAX = 200000,
+    RTGS_MAX = 1000000,
+    NEFT_IMPS_MIN = 1,
+    LoggedInUserDetails = {},
+    fullDate = "",
+    monthArr = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    ALLOWONLYALPHACYRILLIC = /[^a-zA-Z\u0400-\u04FF ]/g,
+    ALLOWONLYALPHANUMCYRILLIC = /[^a-zA-Z0-9\u0400-\u04FF]/g,
+    ALLOWONLYALPHANUMCYRILLICSPL = /[^a-zA-Z\u0400-\u04FF\.\,\-\(\)\/\=\'\+\:\?\!\"\%\&\*\<\>\;\@\~\`\#\$\^\_ ]/g,
+    ALLOWONLYALPHANUMCYRILLICSP = /[^a-zA-Z0-9\u0400-\u04FF ]/g,
+    ALLOWONLYALPHANUMCYRILLICSPMONG = /[^a-zA-Z0-9\u0400-\u04FF\.\,\-\(\)\/\=\'\+\:\?\!\"\%\&\*\<\>\; ]/g,
+    ALLOWONLYALPHASPL = /[^a-zA-Z\.\,\-\(\)\/\=\'\+\:\?\!\"\%\&\*\<\>\;\@\~\`\#\$\^\_ ]/g;
+var MAX_USER_LEN = 20;
+var MIN_USER_LEN = 3;
+var NATIONAL_ID_EXP = /[^0-9]/g;
+var SING_NATIONAL_ID_LEN = 2;
+var MOB_NO_LEN = 8;
+var ACC_MINMAX_LEN = 10;
+var NATIONAL_ID_LEN = 10;
+var NATIONAL_ID = "";
+var amtRegex = "^(0[.]\\d+)$|^([0-9,]+\\d*([.]\\d+)?)$";
+var AMOUNTALLOWNUMBERDECIMALS = new RegExp(amtRegex);
+apz.app.Common = {};
+apz.app.Common.deepLinkFlag = false;
+apz.app.Common.deepLinkParams = "";
+apz.app.Common.fnValidatenumbers = function(pthis) {
+    pthis.value = pthis.value.replace(ALLOWONLYNUM, '');
+};
+apz.ns.universalUrlResp = function(params) {
+    // alert(JSON.stringify(params));
+    apz.app.Common.fnSetDeepLinkParams(params);
+}
+apz.app.Common.fnSetDeepLinkParams = function(params) {
+    if (params.deepLinkParams.qPay_QRcode !== undefined) {
+        if (!apz.isNull(params.deepLinkParams.qPay_QRcode) && params.deepLinkParams.qPay_QRcode.length > 0) {
+            if ($(".alertify")[0] !== undefined) {
+                $(".alertify")[0].remove()
+            }
+            apz.app.Common.deepLinkFlag = true;
+            apz.app.Common.deepLinkParams = params.deepLinkParams.qPay_QRcode;
+            if (apz.XACBA.LandingPage !== undefined) {
+                apz.XACBA.LandingPage.fnStopQRScanner();
+                apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_QPAY'], apz.XACBA.LandingPage.USEROBJ, true);
+            }
+        }
+    }
+}
+apz.app.Common.launchMicroApp = function(appId, screenId, currDiv, obj) {
+    var ArrKey = [],
+        ArrVal = [];
+    ArrKey = ["appId", "scr", "div", "userObj", "animation"];
+    ArrVal = [appId, screenId, currDiv, obj, 9];
+    var params = apz.app.Common.dynamicRequestGenerator(ArrKey, ArrVal);
+    $('#' + params.div).html('');
+    apz.app.Common.commonLaunchFunction(params, "micro");
+};
+apz.app.Common.launchScreen = function(screen, obj) {
+    var ArrKey = ["scr", "userObj", "animation"],
+        ArrVal = [screen, obj, 9],
+        params = apz.app.Common.dynamicRequestGenerator(ArrKey, ArrVal);
+    apz.app.Common.commonLaunchFunction(params, "screen");
+};
+apz.app.Common.launchSubScreen = function(screen, parentId, obj) {
+    var ArrKey = ["scr", "div", "userObj", "animation"],
+        ArrVal = [screen, parentId, obj, 9],
+        params = apz.app.Common.dynamicRequestGenerator(ArrKey, ArrVal);
+    apz.app.Common.commonLaunchFunction(params, "subScreen");
+};
+apz.app.Common.commonLaunchFunction = function(pRams, screenType) {
+    if (screenType === "micro") {
+        apz.launchApp(pRams);
+    } else if (screenType === "screen") {
+        apz.launchScreen(pRams);
+    } else if (screenType === "subScreen") {
+        apz.launchSubScreen(pRams);
+    }
+};
+apz.app.Common.setElementValueFunction = function(arrId, arrName) {
+    $.map(arrId, function(id, val) {
+        if ($("#" + id)[0].nodeName === "LABEL") {
+            $("#" + id).text(arrName[val]);
+        } else {
+            apz.setElmValue(id, arrName[val]);
+        }
+    });
+};
+apz.app.Common.dynamicRequestGenerator = function(arrIds, arrValues) {
+    var temObj = {},
+        temp = {};
+    $.map(arrIds, function(id, val) {
+        temp[arrIds[val]] = arrValues[val];
+        $.extend(temObj, temp);
+    });
+    return temObj;
+};
+apz.app.Common.TodayDate = function() {
+    var date = new Date();
+    window.todayDate = date.toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+    }).replace(/\s/g, ' ').replace('.', '');
+};
+apz.app.Common.setFullDate = function() {
+    var date = new Date();
+    fullDate = date.toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+        hour12: false
+    }).replace(/\s/g, ' ').replace('.', '').replace(',', ' ');
+};
+apz.app.Common.searchFunction = function(inputId, listId) {
+    var filter, ul, li, p, i;
+    filter = $(inputId).val().toUpperCase();
+    ul = $(listId + " ul");
+    li = ul[0].getElementsByTagName("li");
+    for (i = 0; i < li.length; i++) {
+        p = li[i].getElementsByTagName("p")[0];
+        if (p.innerHTML.toUpperCase().indexOf(filter) > -1) {
+            li[i].style.display = "";
+        } else {
+            li[i].style.display = "none";
+        }
+    }
+};
+apz.app.Common.hideORshowFunction = function(type, arryId) {
+    if (type === "hide") {
+        $(arryId).map(function(i, v) {
+            $("#" + arryId[i]).addClass('sno');
+        });
+    } else if (type === "show") {
+        $(arryId).map(function(i, v) {
+            $("#" + arryId[i]).removeClass('sno');
+        });
+    }
+};
+apz.app.Common.messageDisplayFunction = function(errorCode) {
+    var params = {
+        "code": errorCode
+    };
+    apz.dispMsg(params);
+};
+apz.app.Common.fnDisplayMsg = function(lmsg, ltype, lcallback) {
+    var msgparam = {
+        "message": lmsg,
+        "type": ltype,
+        'callBack': lcallback
+    };
+    apz.dispMsg(msgparam);
+    return lcallback;
+};
+apz.app.Common.getShortName = function(pname) {
+    var lname = "",
+        lbeneficiaryName = pname,
+        shortname = lbeneficiaryName.split(" ");
+    if (shortname.length > 1) {
+        lname = shortname[0].charAt(0) + shortname[1].charAt(0);
+    } else {
+        lname = shortname[0].charAt(0) + shortname[0].charAt(1);
+    }
+    return lname;
+};
+/********************** Format Amount ***********************/
+apz.app.Common.fn_FormatAmount = function(amt) {
+    var ArrKey = ["value", "mask", "decimalPoints", "decimalSep"],
+        ArrVal = [amt, "MILLION", 2, "."],
+        lparams = apz.app.Common.dynamicRequestGenerator(ArrKey, ArrVal);
+    return apz.formatNumber(lparams);
+};
+/******************* Unformat Amount ****************/
+apz.app.Common.fn_unFormatAmount = function(amt) {
+    return amt.split(".")[0].replace(/,/g, "");
+};
+apz.app.Common.fn_unFormatInpAmount = function(pthis) {
+    var decimal = pthis.value.split(".");
+    if (decimal[1] === "00") {
+        pthis.value = pthis.value.split(".")[0].replace(/,/g, "");
+    } else {
+        pthis.value = pthis.value.replace(/,/g, "");
+    }
+};
+/****************Select Row Function ***************/
+apz.app.Common.selectRow_Fun = function(pthis) {
+    return parseInt($(pthis).attr("rowno"));
+};
+/*======================================Server Call Function ========================*/
+apz.app.Common.serverBuildParam = function(appId, inface, paintRes, buildRes, req, asyn, callback) {
+    var ArrKey = ["appId", "ifaceName", "paintResp", "buildReq", "req", "async", "callBack"],
+        ArrVal = [appId, inface, paintRes, buildRes, req, asyn, callback],
+        params = apz.app.Common.dynamicRequestGenerator(ArrKey, ArrVal);
+    apz.startLoader();
+    apz.server.callServer(params);
+};
+apz.app.Common.lbackPressedEvent = function() {
+    var json = {
+        "backButtonEvent": "on"
+    };
+    json.callBack = apz.app.Common.lbackPressedEventCB;
+    json.id = "EventID";
+    apz.ns.detectEvents(json);
+};
+apz.app.Common.lbackPressedEventCB = function(params) {
+    if (params.event === "backButton") {}
+}
+/*=============pass date in 2018-10-22 format and get the result in 22 Oct 2018 format ==============*/
+apz.app.Common.getCustomDateFormate = function(strinDate, format) {
+    var tempDate = strinDate.split('-');
+    var year = tempDate[0];
+    var day = tempDate[2];
+    var monthIndex = parseInt(tempDate[1]);
+    var month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var monthFo = month[monthIndex - 1];
+    var tempDateVar = '';
+    if (format === "") {
+        tempDateVar = "" + day + " " + "" + monthFo + " " + year + "";
+    } else if (format === "-") {
+        tempDateVar = "" + day + "-" + "" + monthFo + "-" + year + "";
+    }
+    return tempDateVar;
+};
+apz.app.Common.cardDateFormate = function(StringNum) {
+    var tempArray = StringNum.split("-");
+    return tempArray[1] + "/" + tempArray[0].substring(2);
+};
+apz.app.Common.getDebitCardValidFromAndToDates = function(ldata) {
+    var temp = ldata.split("-");
+    var tempyear = temp[0].substr(-2);
+    var tempmonth = temp[1];
+    return tempmonth + " / " + tempyear;
+};
+apz.app.Common.pLogoutFunction = function() {
+    apz.app.dashboard.ptoggleModal();
+    apz.startLoader();
+    var ArrKey = ["userId", "callBack", "callBackObj"],
+        ArrVal = [LoggedInUserDetails.loginResponse.userDet.id, apz.app.Common.pLogoutFunctionCB, this],
+        params = apz.app.Common.dynamicRequestGenerator(ArrKey, ArrVal);
+    apz.server.logout(params);
+};
+apz.app.Common.pLogoutFunctionCB = function(params) {
+    if (params.status) {
+        var launchAppReq = {
+            "appId": "CBS",
+            "scr": "PreLogin_BaseScreen",
+            "userObj": {
+                "showSplash": false
+            }
+        };
+        apz.launchApp(launchAppReq);
+    }
+    apz.stopLoader();
+};
+apz.app.Common.shareAccountDetails = function(text) {
+    var pjson = {
+        "textToShare": text,
+        "action": "native_share",
+        "id": "NATIVE"
+    };
+    pjson.callBack = apz.app.Common.shareAccountDetailsCB;
+    if (apz.deviceOs === "ANDROID") {
+        apz.ns.nativeServiceExt(pjson);
+    } else {
+        pjson.id = "NativeShare";
+        apz.ns.nativeShare(pjson);
+    }
+};
+apz.app.Common.shareAccountDetailsCB = function(json) {
+    //not implemented yet
+};
+apz.app.Common.excuteOperationRequest = function() {
+    return;
+};
+apz.app.Common.hideErrmsgBlock = function(pthis, type) {
+    if (type === "MODAL") {
+        if ($("#" + pthis.id).next().hasClass("err-txt")) {
+            $("#" + pthis.id)[0].nextSibling.remove();
+        }
+    } else {
+        if ($("#" + pthis.id).closest('ul').parent().next().closest('div').hasClass('err-txt')) {
+            $("#" + pthis.id).closest('ul').parent().next().closest('div').find('.err-txt').prevObject[0].remove()
+        }
+    }
+};
+apz.app.Common.validateEmailOnKeyUp = function(pthis) {
+    pthis.value = pthis.value.replace(/[^A-z 0-9 @-_.]/gi, '');
+};
+apz.app.Common.validateDOBOnKeyUp = function(pthis) {
+    pthis.value = pthis.value.replace(/[^0-9 -]/gi, '');
+};
+apz.app.Common.fnValidateAlphaChars = function(pthis) {
+    pthis.value = pthis.value.replace(ALLOWALPHA, '');
+    if (pthis.value == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    }
+    if (pthis.value.length > ALPHA_MAX_LEN) {
+        pthis.value = pthis.value.slice(0, ALPHA_MAX_LEN);
+    }
+};
+apz.app.Common.fnAccountNo = function(pthis, pevent, valuestr) {
+    pthis.value = pthis.value.replace(ACCALLOWONLYNUM, '');
+    var value = pthis.value.replace(/\s/g, '');
+    if (pthis.value == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    }
+    /*else if (pthis.value[pthis.value.length - 1] == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    } else {
+        if (pevent.keyCode === 8 ) {} else {
+            if (!apz.isNull(pthis.value)) {
+                if (pthis.value.length > ACC_MAX_LEN) {
+                    pthis.value = pthis.value.slice(0, ACC_MAX_LEN);
+                }
+                if (valuestr == "Mob") {
+                    if (value.length < 7) {
+                        if (pthis.value.length % 5 == 0) {
+                            apz.app.Common.fnSpaceAtPosStr(pthis.value, pthis.id);
+                        }
+                    }
+                } else if (valuestr == "acc") {
+                    if (value.length < 15) {
+                        if (pthis.value.length % 5 == 0) {
+                          
+                            apz.app.Common.fnSpaceAtPosStr(pthis.value, pthis.id);
+                        }
+                    }
+                }
+            }
+        }
+    }*/
+};
+apz.app.Common.fnSpaceAtPosStr = function(val, elmId) {
+    var val = val.split("");
+    var splitInd = val.length - 1;
+    val[splitInd] = " " + val[splitInd];
+    val = val.join("");
+    apz.setElmValue(elmId, val);
+}
+apz.app.Common.funNationalIdFormating = function(pthis, pevent) {
+    pthis.value = pthis.value.replace(ACCALLOWONLYNUM, '');
+    var value = pthis.value.replace(/\s/g, '');
+    if (pthis.value == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    }
+    /* else if (pthis.value[pthis.value.length - 1] == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    } else {
+        if (pevent.keyCode === 8) {} else {
+            if (!apz.isNull(pthis.value)) {
+                if (pthis.value.length > NATIONID_MAX_LEN) {
+                    pthis.value = pthis.value.slice(0, NATIONID_MAX_LEN);
+                }
+                if (value.length < 10) {
+                    if (pthis.value.length % 3 == 0) {
+                        apz.app.Common.fnSpaceAtPosStr(pthis.value, pthis.id);
+                    }
+                }
+            }
+        }
+    }*/
+}
+apz.app.Common.fnWithinAccountNo = function(pthis, pevent) {
+    pthis.value = pthis.value.replace(ACCALLOWONLYNUM, '');
+    var value = pthis.value.replace(/\s/g, '');
+    if (pthis.value == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    }
+    /* else if (pthis.value[pthis.value.length - 1] == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    }
+     else {
+        if (pevent.keyCode === 8) {} else {
+            if (!apz.isNull(pthis.value)) {
+                if (pthis.value.length > WIT_ACC_MAX_LEN) {
+                    pthis.value = pthis.value.slice(0, WIT_ACC_MAX_LEN);
+                }
+                if (value.length <= 8) {
+                    if (pthis.value.length % 4 == 0) {
+                        apz.app.Common.fnSpaceAtPosStr(pthis.value, pthis.id);
+                    }
+                }
+            }
+        }
+    }*/
+};
+apz.app.Common.fnValidateSplCharac = function(pthis, pevent, caseReq) {
+    pthis.value = pthis.value.replace(ALLOWALPHASPL, '');
+    if (pthis.value == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    }
+    if (caseReq === "true") {
+        if (pthis.value.length === 1) {
+            pthis.value = pthis.value.charAt(0).toUpperCase() + pthis.value.slice(1);
+        }
+    }
+};
+apz.app.Common.fnSwiftValidateSplCharac = function(pthis, pevent) {
+    pthis.value = pthis.value.replace(ALLOWSWIFTPATTERN, '');
+    if (pthis.value == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    }
+};
+apz.app.Common.funUserIdPass = function(pthis) {
+    if (pthis.id.split("__")[0] === "LOGN01") {
+        var USERIDPATTERN = /[^a-zA-Z0-9|!\@\!\,\.\#\$\:\^\*\<\>\-\&\%\(\)\?\_ ]/g;
+        pthis.value = pthis.value.replace(USERIDPATTERN, '');
+    } else {
+        pthis.value = pthis.value.replace(USERIDPASS, '');
+    }
+    if (pthis.value == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    }
+};
+apz.app.Common.fnValidateIfsc = function(pthis) {
+    pthis.value = pthis.value.replace(ALPHANUMERIC, '');
+    if (pthis.value.length > IFSC_MAX_LEN) {
+        pthis.value = pthis.value.slice(0, IFSC_MAX_LEN);
+    }
+};
+apz.app.Common.fnValidateIfscChildsname = function(pthis) {
+    pthis.value = pthis.value.replace(ALPHANUMERICFIRSTANDLASTNAME, '');
+    if (pthis.value.length > ALPHA_MAX_LEN) {
+        pthis.value = pthis.value.slice(0, ALPHA_MAX_LEN);
+    }
+};
+apz.app.Common.fnNotAllowpMongoliaCharWithSpec = function(pthis) {
+    pthis.value = pthis.value.replace(NOTALLOWMONGOLIAN, '');
+    if (pthis.value == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    }
+};
+apz.app.Common.fnNotAllowpMongoliaChar = function(pthis) {
+    pthis.value = pthis.value.replace(NOTALLOWMONGOL, '');
+    if (pthis.value == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    }
+};
+apz.app.Common.fnValidatealphanumeric = function(pthis) {
+    pthis.value = pthis.value.replace(ALPHANUMERIC, '');
+    if (pthis.value == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    }
+};
+apz.app.Common.fnValidateAlphaNumNoSpace = function(pthis) {
+    pthis.value = pthis.value.replace(ALPHANUMERICONLY, '');
+    if (pthis.value == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    }
+};
+apz.app.Common.fnValidatealphanumericMong = function(pthis) {
+    pthis.value = pthis.value.replace(ALPHANUMERICMONG, '');
+    if (pthis.value == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    }
+};
+apz.app.Common.unformatAmountWithDecimal = function(p) {
+    var pamount = p;
+    var decimalValue = pamount.split(".");
+    pamount = apz.app.Common.fn_unFormatAmount(pamount);
+    pamount = pamount + "." + decimalValue[decimalValue.length - 1];
+    return pamount;
+};
+//convert the date from 12-04-2018 to 12 Apr 2018
+apz.app.Common.converdateforPainting = function(ldate) {
+    return new Date(ldate).format('d M y');
+};
+//format only date - not time
+apz.app.Common.formatOnlyDate = function(pdate) {
+    var pdateArr = pdate.split("  ");
+    var ldate = new Date(pdateArr[0]).format('Y-m-d');
+    var ltime = pdateArr[1];
+    return ldate + " " + ltime;
+};
+apz.app.Common.decimalNum = function(pthis, param) {
+    apz.app.Common.hideErrmsgBlock(pthis); //hide err block
+    if (pthis.id === param) {
+        var lastValid = document.getElementById(pthis.id).value;
+        if (!ALLOWNUMBERDECIMALS.test(pthis.value)) {
+            var a = lastValid.slice(0, -1);
+            pthis.value = a;
+        }
+    } else {
+        pthis.value = pthis.value.replace(ALLOWONLYNUM, '');
+    }
+};
+apz.app.Common.dropDownFunction = function(year, dropId) {
+    var tempArr = [],
+        ltemp = {
+            "val": year,
+            "desc": year
+        };
+    tempArr.push(ltemp);
+    apz.populateDropdown(document.getElementById(dropId), tempArr);
+    return year;
+};
+apz.app.Common.Withoutanimation = function(screen, parentDiv, userObj) {
+    var ArrKey = ["scr", "div", "userObj"],
+        ArrVal = [screen, parentDiv, userObj],
+        params = apz.app.Common.dynamicRequestGenerator(ArrKey, ArrVal);
+    apz.launchSubScreen(params);
+};
+apz.app.Common.launchMicroAppWithoutAnimation = function(appid, screen, parentDiv, userObj) {
+    var ArrKey = ["appId", "scr", "div", "userObj"],
+        ArrVal = [appid, screen, parentDiv, userObj],
+        params = apz.app.Common.dynamicRequestGenerator(ArrKey, ArrVal);
+    apz.launchApp(params);
+};
+/*On click of + icon to add photo*/
+apz.app.Common.takePicture = function(pthis) {
+    var lparams = {
+        "zoomLevel": "20",
+        "targetWidth": "200",
+        "targetHeight": "200",
+        "crop": "Y",
+        "flash": "N",
+        "action": "base64",
+        "fileName": "userPic",
+        "quality": "75",
+        "encodingType": "JPG",
+        "sourceType": "camera",
+        "id": pthis.id,
+        "callBack": apz.app.Common.lcameraCallback
+    };
+    apz.ns.openCamera(lparams);
+};
+apz.app.Common.lcameraCallback = function(resp) {
+    if (resp.status) {
+        apz.app.Common.takePictureCB(resp);
+    }
+};
+apz.app.Common.setUserAddr = function() {
+    var laddr = '';
+    if (apz.isNull(!Userdata)) {
+        laddr = [Userdata.userAddr1, Userdata.userAddr2, Userdata.userAddr3, Userdata.userAddr4].filter(Boolean).join(", ");
+        return laddr;
+    }
+    return laddr;
+};
+apz.app.Common.scheduleCommon = function(datefieldId) {
+    var currtdate = new Date(),
+        month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        monthIndex = parseInt(currtdate.getMonth() + 1),
+        monthFo = month[monthIndex - 1],
+        lmaxyear = currtdate.getFullYear() + 5,
+        ldate = currtdate.getDate() + "-" + monthFo + "-" + currtdate.getFullYear(),
+        lmaxdate = currtdate.getDate() + "-" + monthFo + "-" + lmaxyear,
+        formatdateobj = {
+            "id": datefieldId,
+            "dataType": "DATETIME",
+            "lookAndFeel": "GENERIC",
+            "parentDisplay": "BUBBLE",
+            "style": "MATERIAL",
+            "parentPreset": "CALENDAR_DATETIME",
+            "parentMinDate": ldate,
+            "parentMaxDate": lmaxdate,
+            "closeOnSel": "N",
+            "multiSel": "N",
+            "parentStartYear": "",
+            "parentEndYear": "",
+            "parentRangePick": "N",
+            "secInputId": "",
+            "parentMultiInput": "N",
+            "dateType": "GENERIC"
+        };
+    apz.initAppzillonDates(formatdateobj);
+}
+//for showing mongolian keypad for forgot userid and Password
+apz.app.Common.mongoliankeypadfn = function(pthis) {
+    $("#" + mangolianKeypad).empty();
+    $("#" + mangolianKeypad).removeClass('sno');
+    var myvar = '<div class = "table-wrap" id="tablewrapid" onclick="apz.app.Common.funclosekeypad()"><table id="mkeypad">' + '<tbody>' + '<tr>' +
+        '<td><input type="button" value="А" onclick="apz.app.Common.alpha(\'А\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Б" onclick="apz.app.Common.alpha(\'Б\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="В" onclick="apz.app.Common.alpha(\'В\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Г" onclick="apz.app.Common.alpha(\'Г\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Д" onclick="apz.app.Common.alpha(\'Д\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Е" onclick="apz.app.Common.alpha(\'Е\',' + pthis.id + ')" class="bt"></td>' + '</tr>' + '<tr>' +
+        '<td><input type="button" value="Ё" onclick="apz.app.Common.alpha(\'Ё\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Ж" onclick="apz.app.Common.alpha(\'Ж\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="З" onclick="apz.app.Common.alpha(\'З\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="И" onclick="apz.app.Common.alpha(\'И\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Й" onclick="apz.app.Common.alpha(\'Й\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="К" onclick="apz.app.Common.alpha(\'К\',' + pthis.id + ')" class="bt"></td>' + '</tr>' + '<tr>' +
+        '<td><input type="button" value="Л" onclick="apz.app.Common.alpha(\'Л\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="М" onclick="apz.app.Common.alpha(\'М\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Н" onclick="apz.app.Common.alpha(\'Н\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="О" onclick="apz.app.Common.alpha(\'О\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Ө" onclick="apz.app.Common.alpha(\'Ө\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="П" onclick="apz.app.Common.alpha(\'П\',' + pthis.id + ')" class="bt"></td>' + '</tr>' + '<tr>' +
+        '<td><input type="button" value="Р" onclick="apz.app.Common.alpha(\'Р\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="С" onclick="apz.app.Common.alpha(\'С\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Т" onclick="apz.app.Common.alpha(\'Т\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="У" onclick="apz.app.Common.alpha(\'У\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Ү" onclick="apz.app.Common.alpha(\'Ү\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Ф" onclick="apz.app.Common.alpha(\'Ф\',' + pthis.id + ')" class="bt"></td>' + '</tr>' + '<tr>' +
+        '<td><input type="button" value="Х" onclick="apz.app.Common.alpha(\'Х\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Ц" onclick="apz.app.Common.alpha(\'Ц\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Ч" onclick="apz.app.Common.alpha(\'Ч\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Ш" onclick="apz.app.Common.alpha(\'Ш\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Щ" onclick="apz.app.Common.alpha(\'Щ\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Ы" onclick="apz.app.Common.alpha(\'Ы\',' + pthis.id + ')" class="bt"></td>' + '</tr>' + '<tr>' +
+        '<td><input type="button" value="Ь" onclick="apz.app.Common.alpha(\'Ь\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Э" onclick="apz.app.Common.alpha(\'Э\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Ю" onclick="apz.app.Common.alpha(\'Ю\',' + pthis.id + ')" class="bt"></td>' +
+        '<td><input type="button" value="Я" onclick="apz.app.Common.alpha(\'Я\',' + pthis.id + ')" class="bt"></td>' + '</tr>' + '</tbody>' +
+        '</table></div>';
+    $("#" + mangolianKeypad).append(myvar);
+}
+apz.app.Common.alpha = function(val, id) {
+    var ids = id.id;
+    ids = ids.slice(0, -1);
+    id.id === ids + "1" ? apz.setElmValue(ids + "1", val) : apz.setElmValue(ids + "2", val);
+    id.id === ids + "1" ? $("#" + ids + "1").addClass("NIDselected") : $("#" + ids + "2").addClass("NIDselected");
+    $("#" + mangolianKeypad).addClass('sno');
+};
+apz.app.Common.funclosekeypad = function() {
+    $('#tablewrapid').addClass("sno");
+}
+apz.app.Common.checkMandatoryField = function(fieldID) {
+    var status = true;
+    for (var i = 0; i < fieldID.length; i++) {
+        var lVal = apz.getElmValue(fieldID[i]);
+        if ((lVal === "") || (lVal === null) || (lVal === undefined)) {
+            status = false;
+            break;
+        }
+    }
+    return status;
+};
+//for national id,mobno,uerid,accountno check
+apz.app.Common.validateFields = function(nationalId, mobno, userId, accountno, isForiener) {
+    apz.app.Common.RemoveErrorMsg();
+    var response = {};
+    response.isValid = true;
+    if (userId !== "") {
+        if (userId.length < MIN_USER_LEN || userId.length > MAX_USER_LEN) {
+            response.msgCode = "XAC-USERID-ERROR";
+            response.isValid = false;
+        }
+    } else if (accountno !== "") {
+        if (accountno.length < ACC_MINMAX_LEN || accountno.length > ACC_MINMAX_LEN) {
+            response.msgCode = "XAC_ACCNO_ERR";
+            response.isValid = false;
+        }
+    }
+    if (isForiener == "N") {
+        if (nationalId.length < NATIONAL_ID_LEN) {
+            response.msgCode = "XAC_NATIONAL_ID";
+            response.isValid = false;
+        } else if (mobno.length < MOB_NO_LEN) {
+            response.msgCode = "XAC_MOB_NO";
+            response.isValid = false;
+        }
+    } else if (mobno.length < MOB_NO_LEN) {
+        response.msgCode = "XAC_MOB_NO";
+        response.isValid = false;
+    }
+    return response;
+}
+//for showing error message
+apz.app.Common.showErrorMSg = function(res) {
+    apz.show("XACBA__FirstPage__errorMsg");
+    var errmsg = apz.msgs.forupw[res.msgCode].slice(1);
+    apz.setElmValue("XACBA__FirstPage__errormsg_text", errmsg);
+};
+apz.app.Common.RemoveErrorMsg = function() {
+    apz.hide("XACBA__FirstPage__errorMsg");
+    $("#LOGN01__Login__MBpwd").attr('readonly', false);
+    $("#LOGN01__Login__MBusrID").attr('readonly', false);
+}
+//for national id
+apz.app.Common.nationalIdtb = function(obj) {
+    var mEvent = window.event;
+    var mPressed = mEvent.keyCode || mEvent.which;
+    var tab1 = obj.value;
+    var id = obj.id;
+    var ids = id.slice(0, -1);
+    if (mPressed !== 8) {
+        if (ids + "1" == id) {
+            if (tab1.length == 2) {
+                $("#" + ids + "2").focus();
+            }
+        } else if (ids + "2" == id) {
+            if (tab1.length == 2) {
+                $("#" + ids + "3").focus();
+            }
+        } else if (ids + "3" == id) {
+            if (tab1.length == 2) {
+                $("#" + ids + "4").focus();
+            }
+        }
+    } else {
+        if (ids + "2" == id) {
+            if (tab1.length == 0) {
+                $("#" + ids + "1").focus();
+            }
+        } else if (ids + "3" == id) {
+            if (tab1.length == 0) {
+                $("#" + ids + "2").focus();
+            }
+        } else if (ids + "4" == id) {
+            if (tab1.length == 0) {
+                $("#" + ids + "3").focus();
+            }
+        }
+    }
+};
+apz.app.Common.fnInputFieldsNullValidation = function(arryId, arrName, type) {
+    var flag = true;
+    if (type === "MODAL") {
+        $.map(arryId, function(id, val) {
+            if (!apz.isNull(id)) {
+                if (apz.isNull(apz.getElmValue(id)) || (apz.getElmValue(id).trim().length) === 0) {
+                    if (!($("#" + id).next().hasClass("err-txt"))) {
+                        $("<div class='err-txt'> " + arrName[val] + " </div>").insertAfter($("#" + id));
+                    }
+                    flag = false;
+                }
+            }
+        });
+    } else {
+        $.map(arryId, function(id, val) {
+            if (!apz.isNull(id)) {
+                if (apz.isNull(apz.getElmValue(id)) || (apz.getElmValue(id).trim().length) === 0) {
+                    if (!($("#" + id).closest('ul').parent().next().hasClass("err-txt"))) {
+                        $("<div class='err-txt'> " + arrName[val] + " </div>").insertAfter($("#" + id).closest("ul").parent());
+                    }
+                    flag = false;
+                }
+            }
+        });
+    }
+    return flag;
+};
+apz.app.Common.fnInputFieldsErrLine = function(arrId, arrName) {
+    if (!($("#" + arrId).closest('ul').parent().next().hasClass("err-txt"))) {
+        $("<div class='err-txt'> " + arrName + " </div>").insertAfter($("#" + arrId).closest("ul").parent());
+    }
+};
+/*Function added for account number masking*/
+apz.app.Common.fnAccNoMask = function(accNo) {
+    //  var accNo = 'xx ' + ' ' + accNo.substring(accNo.length - 4);
+    return accNo;
+}
+apz.app.Common.fnBeneAccNoMask = function(beneAccNo) {
+    var accNo = beneAccNo.slice(0, 2) + 'XXXXXX' + beneAccNo.slice(-3);
+    return accNo;
+}
+/*Function added for email masking*/
+apz.app.Common.fnmaskemail = function(user_email) {
+    if (!apz.isNull(user_email) && user_email !== 'null') {
+        var mail = user_email.split("@");
+        var maskedMail = mail[0].substring(0, 1) + "********@" + mail[1];
+        return maskedMail;
+    }
+};
+/**********Mobile number masking*************/
+apz.app.Common.fnMobNoMask = function(mobNo) {
+    if (!apz.isNull(mobNo) && mobNo !== 'null') {
+        var firstChar = mobNo.substring(0, 1);
+        var lastChar = mobNo.substring(mobNo.length - 1);
+        return firstChar + "******" + lastChar
+    }
+}
+/*function for getting nickname pattern*/
+apz.app.Common.fnGetNicNm = function(nicNm) {
+    var pnicNam;
+    if ((nicNm.indexOf(" ")) == -1) {
+        pnicNam = nicNm.slice(0, 2);
+    } else {
+        pnicNam = (nicNm.slice(0, 1)) + (nicNm.slice(nicNm.indexOf(" ") + 1, nicNm.indexOf(" ") + 2));
+    }
+    return pnicNam.toLowerCase();
+}
+apz.app.Common.fnAccNoFormatingUsingScript = function(accNo) {
+    var accNoWithSpace = accNo.replace(/\s+/g, '').replace(/[^0-9]/gi, '')
+    var accNoWithSpace1 = accNoWithSpace.substr(0, 3);
+    var accNoWithSpace2 = accNoWithSpace.substr(3, 3);
+    var accNoWithSpace3 = accNoWithSpace.substr(6, 4);
+    return accNoWithSpace1 + " " + accNoWithSpace2 + " " + accNoWithSpace3;
+}
+apz.app.Common.showloginErrorMSg = function(res) {
+    apz.show("XACBA__FirstPage__errorMsg");
+    var errmsg = apz.msgs.LOGN01[res.msgCode].slice(1);
+    apz.setElmValue("XACBA__FirstPage__errormsg_text", errmsg);
+    $("#LOGN01__Login__MBpwd").attr('readonly', 'readonly');
+    $("#LOGN01__Login__MBusrID").attr('readonly', 'readonly');
+};
+/**
+ * @Purpose    - Function to convert html to text
+ * @Developer  - Tejaswini
+ **/
+apz.app.Common.stripHtml = function(html) {
+    var temporalDivElement = document.createElement("div");
+    temporalDivElement.innerHTML = html;
+    return temporalDivElement.textContent || temporalDivElement.innerText || "";
+}
+/**
+ * @Purpose    - Function to fetch quickAccessMenu
+ * @Developer  - Tejaswini
+ **/
+apz.app.Common.fetchMenu = function() {
+    var lreq = {
+        "getCustomerDetailsObj": {}
+    };
+    var lServerParam = {
+        "ifaceName": "fetchQuickAccessMenu",
+        "buildReq": "N",
+        "req": lreq,
+        "paintResp": "N",
+        "async": true,
+        "callBack": apz.app.Common.fetchMenuCB
+    };
+    apz.startLoader();
+    apz.server.callServer(lServerParam);
+}
+apz.app.Common.fetchMenuCB = function(params) {}
+apz.app.Common.checkForMIMEType = function(response, id) {
+    var blob = apz.app.Common.converBase64toBlob(response, 'application/pdf');
+    var blobURL = URL.createObjectURL(blob);
+    var _iFrame = document.createElement('iframe');
+    _iFrame.setAttribute('src', blobURL);
+    _iFrame.setAttribute('src', blobURL.concat("#toolbar=0"));
+    $("#" + id).append(_iFrame)
+}
+apz.app.Common.converBase64toBlob = function(content, contentType) {
+    contentType = contentType || '';
+    var sliceSize = 512;
+    var byteCharacters = window.atob(content); //method which converts base64 to binary
+    var byteArrays = [];
+    for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+        var slice = byteCharacters.slice(offset, offset + sliceSize);
+        var byteNumbers = new Array(slice.length);
+        for (var i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+        }
+        var byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+    }
+    var blob = new Blob(byteArrays, {
+        type: contentType
+    }); //statement which creates the blob
+    return blob;
+}
+//html2canvas
+var element;
+var getCanvas;
+apz.app.Common.getVirtualImg = function(id) {
+    element = $("#" + id);
+    html2canvas(element, {
+        onrendered: function(canvas) {
+            getCanvas = canvas;
+        }
+    });
+    var imgageData = getCanvas.toDataURL("image/png");
+    return imgageData;
+}
+apz.app.exportExcel = function(param, reportName) {
+    if (navigator.userAgent.indexOf("Chrome") != -1) {
+        var uri = 'data:application/vnd.ms-excel;base64,';
+        var link = document.createElement("a");
+        link.download = reportName + ".xls";
+        link.href = uri + param.res.file;
+        link.click();
+    } else if (navigator.userAgent.indexOf("Firefox") != -1) {
+        window.open("data:application/vnd.ms-excel;base64," + param.res.file, "", "");
+    } else if ((navigator.userAgent.indexOf("MSIE") != -1) || (!!document.documentMode == true)) //IF IE > 10
+    {
+        window.open("data:application/vnd.ms-excel;base64," + param.res.file, "", "");
+    }
+};
+/*Common method used for reports when pdf data is returned*/
+apz.app.exportPDF = function(param, reportName) {
+    if (navigator.userAgent.indexOf("Chrome") != -1) {
+        var uri = 'data:application/pdf;base64,';
+        var link = document.createElement("a");
+        link.download = reportName + ".pdf";
+        link.href = uri + param.res.file;
+        link.click();
+    } else if (navigator.userAgent.indexOf("Firefox") != -1) {
+        window.open("data:application/pdf;base64," + param.res.file, "", "");
+    } else if ((navigator.userAgent.indexOf("MSIE") != -1) || (!!document.documentMode == true)) //IF IE > 10
+    {
+        window.open("data:application/pdf;base64," + param.res.file, "", "");
+    }
+};
+apz.app.Common.NotAllowSpace = function(pthis, ptype) {
+    /*if (apz.deviceType !== "IOS") {
+        var value = pthis.value;
+        if (ptype == "within") {
+            if (value.length < 8) {
+                $(pthis).val(function(index, value) {
+                    return value.replace(/\W/gi, '').replace(/(.{3})/g, '$1 ');
+                });
+            }
+        } else if (ptype == "other") {
+            $(pthis).val(function(index, value) {
+                return value.replace(/\W/gi, '').replace(/(.{4})/g, '$1 ');
+            });
+        }
+    }*/
+}
+apz.app.Common.fnAmountDecValidation = function(pthis) {
+    pthis.value = pthis.value.replace("..", '.');
+}
+apz.app.Common.fnInputDecimalValidation = function(pthis) {
+    var value = pthis.value.replace(/,/g, '');
+    pthis.value = apz.getFloat(value);
+}
+apz.app.Common.appendrow = function(id, val, url) {
+    var data2 = "";
+    var data1
+    var data3
+    var finalData
+    var span1 = "<span>"
+    var span2 = "</span>"
+    for (var i = 0; i < val.length; i++) {
+        var blobURL = apz.app.Common.converBase64toBlob(val[i], 'image/png');
+        var srcdata = URL.createObjectURL(blobURL)
+        //url[i]="http://www.xacbank.mn/"
+        if (i === 0) {
+            data2 = span1 + '<img src=' + '"' + srcdata + '"' + ' onClick=window.open' + '(' + '"' + url[i] + '"' + ')' + ' />' + span2
+        } else {
+            data2 = data2 + span1 + "           " + '<img src=' + '"' + srcdata + '"' + ' onClick=window.open' + '(' + '"' + url[i] + '"' + ')' +
+                ' />' + span2
+        }
+    }
+    data1 = "<div>"
+    data3 = "</div>"
+    finalData = data1 + data2 + data3
+    for (i = 0; i < id.length; i++) {
+        $(id[i]).append(finalData);
+    }
+}
+apz.app.Common.DownloadImage = function(id, type) {
+    var Position = $('#' + id)[0].getBoundingClientRect();
+    var XScr = Position.left;
+    var Yscr = Position.top;
+    var Width = $('#' + id).outerWidth();
+    var Height = $('#' + id).outerHeight();
+    if (apz.deviceType === "ANDROID") {
+        var pixel = window.devicePixelRatio;
+        XScr = XScr * pixel;
+        Yscr = Yscr * pixel;
+        Width = Width * pixel;
+        Height = Height * pixel;
+    }
+    var json = {};
+    json.id = "NATIVE";
+    json.action = "takeScreenshot";
+    json.fileName = "receipt";
+    json.quality = "100";
+    json.encodingType = type; //(supported type //JPEG,PNG and(JPG only for Android))
+    json.ssStartX = parseInt(XScr) - 10;
+    json.ssStartY = parseInt(Yscr) - 10;
+    json.ssWidth = parseInt(Width);
+    json.ssHeight = parseInt(Height) + 10;
+    json.callBack = apz.app.Common.fnShare;
+    apz.ns.nativeServiceExt(json)
+}
+apz.app.Common.fnShare = function(params) {
+    if (params.status) {
+        var json = {};
+        json.action = "file";
+        json.filePath = params.filePath;
+        json.callBack = apz.app.Common.fnShareRecpCB;
+        apz.ns.nativeShare(json);
+    }
+}
+apz.app.Common.fnShareRecpCB = function(params) {}
+apz.app.Common.fn_SortPrimaryAccount = function(primaryVal) {
+    debugger;
+    var primaryAcc = [];
+    var nonPrimaryAcc = [];
+    var primaryValSort = primaryVal;
+    for (var j = 0; j < primaryValSort.length; j++) {
+        if (primaryValSort[j].isPrimaryAc === "Y") {
+            primaryAcc.push(primaryValSort[j]);
+        } else {
+            nonPrimaryAcc.push(primaryValSort[j]);
+        }
+    }
+    var newArray = primaryAcc.concat(nonPrimaryAcc);
+    return newArray;
+}
+apz.app.Common.fnCustomerNameValidation = function(pthis) {
+    var pattern = /[^a-zA-Z\ \.\-\u0400-\u04FF]/g;
+    pthis.value = pthis.value.replace(pattern, '');
+    if (pthis.value == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    }
+};
+apz.app.Common.fn_getImgUrl = function(lmodule) {
+    var lDomainurl = "";
+    var lImgurl = "";
+    try {
+        if (apz.deviceType === "WEB") {
+            lDomainurl = window.location.origin;
+        } else {
+            lDomainurl = apz.serverUrl.split("/");
+            lDomainurl = lDomainurl[0] + "//" + lDomainurl[2];
+        }
+        if (!apz.isNull(lmodule)) {
+            lImgurl = lDomainurl + "/DigitalBanking/"
+        } else {
+            lImgurl = lDomainurl + "/DigitalBanking/"
+        }
+    } catch (err) {}
+    return lImgurl;
+}
+apz.app.Common.addImageURL = function(lArrobj, lurl, lKeyName) {
+    try {
+        if (lArrobj instanceof Array) {
+            for (var i = 0; i < lArrobj.length; i++) {
+                lArrobj[i] = apz.app.Common.addImageURL(lArrobj[i], lurl, lKeyName);
+            }
+        } else if (lArrobj instanceof Object) {
+            for (var propName in lArrobj) {
+                if (propName === lKeyName && !apz.isNull(lArrobj[propName])) {
+                    lArrobj[propName] = lurl + lArrobj[propName];
+                }
+            }
+        }
+    } catch (err) {
+        // 
+    }
+    return lArrobj;
+}
+apz.app.Common.fnMailValid = function(obj) {
+    var mailpattern = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}/igm;
+    var mail = $(obj).val();
+    if (!(mail.match(mailpattern))) {
+        $(obj).val("");
+        apz.app.Common.fnInputFieldsErrLine(obj.id, apz.msgs["XACBA"]["ERR_MAILID"].slice(1));
+    }
+}
+apz.app.isSpace = function(evt) {
+    var charCode = (evt.which) ? evt.which : evt.keyCode;
+    if (charCode > 31 && (charCode < 48 || charCode > 57) || charCode === 32) {
+        return false;
+    } else {
+        return true;
+    }
+};
+apz.app.Common.valMob = function(pthis, pevent) {
+    var regx = /^[0-9.,]+$/;
+    var l_valpthis = $(pthis).val();
+    if (!apz.isNull(l_valpthis)) {
+        if (!regx.test(l_valpthis)) {
+            $("#" + pthis.id).val("");
+        }
+    }
+};
+/**
+ * @param lSelector: className or Div ID with selector symbol
+ * To enable scroll for the div : apz.app.Common.NiceScrollEnable(".post-landing-row");
+ * To resize scroll for the div :apz.app.Common.NiceScrollRefresh(".post-landing-row");
+ * To disable scroll for the div :apz.app.Common.NiceScrollDisable(".post-landing-row");
+ **/
+apz.app.Common.NiceScrollEnable = function(lSelector) {
+    $(lSelector).niceScroll({
+        cursorwidth: 8,
+        cursoropacitymin: 0.4,
+        cursorcolor: '#757999',
+        cursorborder: 'none',
+        cursorborderradius: 4,
+        cursorminheight: 32,
+        autohidemode: 'leave'
+    });
+};
+apz.app.Common.NiceScrollRefresh = function(lSelector) {
+    $(lSelector).getNiceScroll().resize();
+};
+apz.app.Common.NiceScrollDisable = function(lSelector) {
+    $(lSelector).getNiceScroll().remove();
+};
+apz.app.Common.fnOnlyAlphaSpl = function(pthis) {
+    pthis.value = pthis.value.replace(ALLOWONLYALPHASPL, '');
+    if (pthis.value == " ") {
+        $(pthis).val($(pthis).val().slice(0, -1));
+        return false;
+    }
+};
+apz.app.Common.resetMyAddressbar = function() {
+    try {
+        var lorgin = window.location.origin;
+        var path = window.location.pathname.split("/");
+        var lAppUrl = lorgin + "/" + path[1] + "/AppzillonWeb";
+        history.pushState(null, "", lAppUrl);
+    } catch (err) {}
+}
+apz.app.Common.ToggleWithDate = function() {
+    $(document).on('hide.bs.modal', '#Accoun__AccountStatement__confirmation', function(e) {
+        $(".hasDatepicker").each(function(index, element) {
+            var context = $(this);
+            context.on("blur", function(e) {
+                setTimeout(function() {
+                    if (!context.is(':focus')) {
+                        $(context).datepicker("hide");
+                    }
+                }, 50);
+            });
+        });
+    });
+}
+apz.app.Common.setCookie = function(userId, name, value, days) {
+    var expires = "";
+    var key = apz.serverToken + userId;
+    var encValue = CryptoJS.AES.encrypt(value, key);
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (encValue || "") + expires + "; path=/";
+};
+apz.app.Common.getCookie = function(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+};
+apz.app.Common.getDecryptCookie = function(userId, name) {
+    var decryptedval2 = CryptoJS.AES.decrypt(apz.app.Common.getCookie(name), apz.serverToken + userId);
+    return decryptedval2.toString(CryptoJS.enc.Utf8)
+};
+apz.app.Common.deleteCookie = function(name) {
+    //document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    var date = new Date();
+    date.setTime(date.getTime() - (15000 * 24 * 60 * 60 * 1000));
+    var expires = "; expires=" + date.toUTCString();
+    document.cookie = name + "=;" + expires + "; path=/";
+};
+apz.app.Common.userDeviceinfo = function() {
+    var ldata = {
+        "appName": navigator.appName,
+        "appCodeName": navigator.appCodeName,
+        "product": navigator.product,
+        "appVersion": navigator.appVersion,
+        "userAgent": navigator.userAgent,
+        "platform": navigator.platform,
+        "language": navigator.language,
+        "onLine": navigator.onLine
+    }
+    return !apz.isNull(ldata) ? ldata : "";
+};
+apz.app.Common.subStringCookie = function(name, llength) {
+    var lcookie = apz.app.Common.getCookie(name);
+    if (!apz.isNull(lcookie)) {
+        lcookie = (lcookie.length > llength) ? lcookie.substring(0, llength) : lcookie;
+    } else {
+        lcookie = "";
+    }
+    return lcookie;
+}
+apz.app.Common.fnIOSAmountKeyPad = function(fieldid) {
+    if (apz.deviceType === "IOS") {
+        $("#" + fieldid).attr("type", "tel");
+        $("#" + fieldid).attr({
+            "type": "number",
+            "pattern": "[0-9]*",
+            "inputmode": "decimal"
+        });
+    }
+}
+apz.app.Common.startIdleTimer = function() {
+    var params = {};
+    params.id = "EXPIRE_ID";
+    params.callBack = apz.app.Common.startIdleTimerCallback;
+    apz.ns.startIdleTimer(params);
+};
+apz.app.Common.startIdleTimerCallback = function(params) {
+
+    if (params.event === "timerExceeds") {
+        var lmsg = {
+            'code': 'APZ_CONFIRM_TIME',
+            "labels": ["Continue", "Logout"],
+            "callBack": apz.app.Common.handleStartTimer
+        }
+        apz.dispMsg(lmsg);
+        // console.log("Time Over");
+        // alert("idle time up");
+    }
+};
+apz.app.Common.handleStartTimer = function(params) {
+    console.log(params);
+    if (params.choice) {
+        apz.app.Common.startIdleTimer();
+    }
+    if (params.choice === false) {
+        apz.LOGN01.customerInformation.LaunchFirstPage();
+    }
+};
+/* Function to implement shortcur functionality */
+apz.app.Common.fnShortcut = function() {
+    debugger;
+    if (apz.deviceOs !== "WEB") {
+        console.log('inside fnShortcut function');
+        var json = {};
+        json.id = "SHORTCUTLISTENER_ID";
+        json.callBack = apz.app.Common.fnShortcutCB;
+        apz.ns.startShortcutListener(json);
+    }
+}
+apz.app.Common.fnShortcutCB = function(json) {
+    debugger;
+    shortClickFlag = true;
+    if (apz.deviceOs !== "WEB") {
+        shortcutIDObj = json;
+        if (apz.XACBA.loginStatus && shortcutIDObj.shortcutID != undefined) {
+            var jsonobj = {};
+            jsonobj.id = "BARCODE_ID";
+            apz.ns.stopBarcodeScan(jsonobj);
+            if (shortcutIDObj.shortcutID == "ACCOUNTDETAILSID") {
+                apz.XACBA.LandingPage.fnMenuNav("accounts", "", true);
+            } else if (shortcutIDObj.shortcutID == "QUICKPAYID") {
+                $("#XACBA__LandingPage__ct_lst_1_row_2").trigger("click");
+            } else if (shortcutIDObj.shortcutID == "TRANSFERESID") {
+                $("#XACBA__LandingPage__ct_lst_1_row_0").trigger("click");
+            }
+        }
+    }
+}
+apz.app.Common.fnstopShortcut = function() {
+    debugger;
+    var json = {};
+    json.id = "SHORTCUTLISTENER_ID";
+    json.callBack = apz.app.Common.fnstopShortcut.noficationstartListenerCallback;
+    apz.ns.stopShortcutListener(json);
+}
+apz.app.Common.fnstopShortcut.noficationstartListenerCallback = function(resp) {
+    debugger;
+    var status = resp.event;
+}
+
+apz.app.Common.stopGesture = function(){
+    var json = {};
+    json.id = "GESTURE_ID ";
+    json.callBack = apz.app.Common.stopGestureCallback;
+    apz.ns.stopGesture(json);
+}
+apz.app.Common.stopGestureCallback = function(params){}

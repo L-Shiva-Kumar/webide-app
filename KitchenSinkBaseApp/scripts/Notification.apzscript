@@ -1,0 +1,36 @@
+apz.XACBA.Notification = {};
+var notification ="";
+apz.app.onLoad_Notification = function() {};
+apz.XACBA.Notification.onSubmit=function(){
+    debugger;
+    notification= $("#XACBA__Notification__notification_li input:checked").val();
+    var json = {};
+    if(notification==="off"){
+        json.id = "NOTIFICATIONSTOLIST_ID";
+        json.callBack = apz.XACBA.Notification.noficationstopListenerCallback;
+        apz.ns.stopNotificationListener(json);
+    }
+    else{
+        json.id = "NOTIFICATIONSTRTLIST_ID";
+        json.callBack = apz.XACBA.Notification.noficationstartListenerCallback;
+        apz.ns.startNotificationListener(json);
+    }
+}
+apz.XACBA.Notification.noficationstopListenerCallback=function(params){
+    debugger;
+    if (notification === "off") {
+        var lMsg = {
+            "code": 'NOTIFICATION_OFF'
+        };
+        apz.dispMsg(lMsg);
+    }
+}
+apz.XACBA.Notification.noficationstartListenerCallback=function(params){
+    debugger;
+    if (notification === "on") {
+        var lMsg = {
+            "code": 'NOTIFICATION_ON'
+        };
+        apz.dispMsg(lMsg);
+    }
+}

@@ -1,0 +1,103 @@
+ apz.XACBA.GestureConfiguration = {};
+ var eventName;
+ apz.app.onLoad_GestureConfiguration = function() {
+     apz.XACBA.GestureConfiguration.enableGesture();
+ }
+ apz.XACBA.GestureConfiguration.enableGesture = function(){
+     $("#XACBA__GestureConfiguration__gestureEnable_option_Enable").change(function(){
+     $("#XACBA__GestureConfiguration__optionScreen").removeClass('sno');
+        if(apz.deviceType === "IOS"){
+            $("#XACBA__GestureConfiguration__pinch").removeClass('sno');
+        } 
+        else{
+            $("#XACBA__GestureConfiguration__zoomInRow").removeClass('sno');
+            $("#XACBA__GestureConfiguration__zoomOutRow").removeClass('sno');
+        }
+    
+     });
+     
+     $("#XACBA__GestureConfiguration__gestureEnable_option_Disable").change(function(){
+     $("#XACBA__GestureConfiguration__optionScreen").addClass('sno');
+    apz.XACBA.GestureConfiguration.submitGesture();
+     });
+     
+     
+     
+ }
+
+ apz.XACBA.GestureConfiguration.submitGesture = function() {
+     var doubleTapAction = $("#XACBA__GestureConfiguration__DoubleTap").val();
+     var tripleTapAction = $("#XACBA__GestureConfiguration__TripleTap").val();
+     var zoomIn = $("#XACBA__GestureConfiguration__zoomIn").val();
+     var zoomOut = $("#XACBA__GestureConfiguration__zoomOut").val();
+     var longPressAction = $("#XACBA__GestureConfiguration__LongPress").val();
+     var swipeRight = $("#XACBA__GestureConfiguration__swipeRight").val();
+     var swipeLeft = $("#XACBA__GestureConfiguration__swipeLeft").val();
+     var pinch = $("#XACBA__GestureConfiguration__pinchAction");
+     var status = $("#XACBA__GestureConfiguration__gestureEnable_li input:checked").val();
+     var request = {};
+     var eventArr = [{
+             "eventName": "doubleTap",
+             "eventAction": doubleTapAction
+         }, {
+             "eventName": "tripleTap",
+             "eventAction": tripleTapAction
+         }, {
+             "eventName": "zoomIn",
+             "eventAction": zoomIn
+         }, {
+             "eventName": "zoomOut",
+             "eventAction": zoomOut
+         }, {
+             "eventName": "longPress",
+             "eventAction": longPressAction
+         }, {
+             "eventName": "swipeRight",
+             "eventAction": swipeRight
+         }, {
+             "eventName": "swipeLeft",
+             "eventAction": swipeLeft
+         }, {
+             "eventName": "pinch",
+             "eventAction": ""
+         }]
+
+    if (status === "Enable") {
+         request.eventArr = eventArr;
+         request.status = "enabled";
+     } else {
+         
+         for (let i = 0; i < eventArr.length; i++) {
+             eventArr[i].eventAction = "";
+             if(eventArr[i].eventName === "pinch" && apz.deviceType === "IOS"){
+              eventArr[i].eventAction = pinch;
+             }
+         }
+         request.eventArr = eventArr;
+         request.status = "disabled";
+         apz.app.Common.stopGesture();
+
+     }
+     apz.XACBA.GestureConfiguration.getGestureResp(request);
+ }
+ 
+ apz.XACBA.GestureConfiguration.getGestureResp = function(params){
+     var lParam = {
+         "ifaceName": "gestureConfig",
+         "buildReq": "N",
+         "req": params,
+         "paintResp": "N",
+         "async": true,
+         "callBack": apz.XACBA.GestureConfiguration.GestureConfigCB
+     };
+     apz.server.callServer(lParam);
+     var msg = {
+         "code": "SUBMIT_SUCCESS"
+     };
+     apz.dispMsg(msg);
+ }
+ apz.XACBA.GestureConfiguration.GestureConfigCB = function(params) {}
+ 
+ 
+ 
+ 

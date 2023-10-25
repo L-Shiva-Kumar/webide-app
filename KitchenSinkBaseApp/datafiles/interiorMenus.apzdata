@@ -1,0 +1,137 @@
+{
+    "serviceRequestMenu": [
+        {
+            "menuItem": "Reference Letter",
+            "Img": "icon-reference-letter"
+        },
+        {
+            "menuItem": "Receipt",
+            "Img": "icon-receipt"
+        },
+        {
+            "menuItem": "Alert & Notification",
+            "Img": "icon-alerts"
+        },
+        {
+            "menuItem": "Tracking",
+            "Img": "icon-tracking"
+        }
+    ],
+    "settingsMenu": [
+        {
+            "menuItem": "Profile",
+            "Img": "icon-profile"
+        },
+               {
+            "menuItem": "Orientation",
+            "Img": "icon-mobile"
+        },
+        {
+            "menuItem": "Manage Accounts",
+            "Img": "icon-manage-account"
+        },
+        {
+            "menuItem": "Generate CAM",
+            "Img": "icon-generate-cam"
+        },
+        {
+            "menuItem": "Change Passwords",
+            "Img": "icon-change-password"
+        },
+        {
+            "menuItem": "Manage Limit",
+            "Img": "icon-change-limit"
+        },
+        {
+            "menuItem": "Create Transaction Code",
+            "Img": "icon-transaction-code"
+        },
+        {
+            "menuItem": "Biometric Authentication",
+            "Img": "icon-key"
+        },
+        {
+            "menuItem": "DetectHarmfullApps",
+            "Img": "icon-warning-alt"
+        },
+        {
+            "menuItem": "Notification",
+            "Img": "icon-bell"
+        },
+        {
+            "menuItem": "Gesture",
+            "Img": "icon-caret-right"
+        }
+ 
+    ],
+    "serviceRequestMenuMn": [
+        {
+            "menuItem": "Дансны тодорхойлолт",
+            "Img": "icon-reference-letter"
+        },
+        {
+            "menuItem": "Гүйлгээний баримт",
+            "Img": "icon-receipt"
+        },
+        {
+            "menuItem": "XacИнфо үйлчилгээ",
+            "Img": "icon-alerts"
+        },
+        {
+            "menuItem": "Хандалтын түүх",
+            "Img": "icon-tracking"
+        }
+    ],
+    "settingsMenuMn": [
+        {
+            "menuItem": "Хувийн мэдээлэл",
+            "Img": "icon-profile"
+        },
+        {
+            "menuItem": "Дансны удирдлага",
+            "Img": "icon-manage-account"
+        },
+        {
+            "menuItem": "Төвлөрсөн хаягийн бүртгэл",
+            "Img": "icon-generate-cam"
+        },
+        {
+            "menuItem": "Нууц үгийн тохиргоо",
+            "Img": "icon-change-password"
+        },
+        {
+            "menuItem": "Лимит тохиргоо",
+            "Img": "icon-change-limit"
+        },
+        {
+            "menuItem": "Гүйлгээний код үүсгэх",
+            "Img": "icon-transaction-code"
+        }
+    ],
+    "qpayMenu": [
+        {
+            "menuItem": "Payment History",
+            "Img": "icon-qr-history"
+        },
+        {
+            "menuItem": "Qpay Settings",
+            "Img": "icon-qr-settings"
+        },
+        {
+            "menuItem": "QPay"
+        }
+    ],
+    "qpayMenuMn": [
+        {
+            "menuItem": "Төлбөрийн түүх",
+            "Img": "icon-qr-history"
+        },
+        {
+            "menuItem": "Тохиргоо",
+            "Img": "icon-qr-settings"
+        },
+        {
+            "menuItem": "QPay"
+        }
+    ]
+}

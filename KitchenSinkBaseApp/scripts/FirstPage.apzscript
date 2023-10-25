@@ -1,0 +1,1108 @@
+var DASH_RELOAD = false;
+apz.XACBA = {};
+apz.XACBA.loginStatus = "";
+//apz.app.CommonValidator = {};
+apz.XACBA.FirstPage = {};
+apz.XACBA.FirstPage.SPARAMS = {};
+apz.XACBA.FirstPage.DANResponse = "";
+var ISOFFLINE = false;
+apz.XACBA.commonscript = {};
+apz.XACBA.commonscript.SPARAMS = {};
+apz.app.Common.SPARAMS = {};
+apz.XACBA.FirstPage.regbacknaigationflag = false;
+var LNG = "en";
+var animation;
+var devicebackcheck;
+var DEFAULT_LNG = "english";
+var firstPgeLaunchRow = "XACBA__FirstPage__launchRow";
+var errmsgID = "XACBA__FirstPage__errorMsg";
+var DAN_TO_APP_STATE = "";
+var DAN_TO_APP_CODE = "";
+var DAN_TO_APP_COOKIE = "";
+var DAN_TO_APP = "";
+var DAN_TO_APP_QUERYSTRING = "";
+var DAN_TO_APP_QPAYDEVICEID = "";
+var DAN_TO_APP_USR = "";
+//startListenerID = "";
+var firstPageAppId = "XACBA__FirstPage__";
+apz.XACBA.FirstPage.loginresprefactor1 = "";
+apz.XACBA.FirstPage.loginresprefactor2 = "";
+var ANIMATION_FORWARD = "";
+var ANIMATION_BACKWARD = "";
+var DAN_REDIECT_SUCCESS = true;
+var shortcutIDObj = "";
+var shortClickFlag = false;
+apz.XACBA.FirstPage.fnBackPressFunction = function() {}
+$(document).ready(function() {
+    // $(':input').live('focus', function() {
+    //     $(this).attr('autocomplete', 'off');
+    // });
+});
+var count = 0;
+apz.XACBA.fnPluginCall = function() {
+    var jsonobj = {
+        "id": "PLGN_GET_APPTOKEN",
+        "callBack": apz.XACBA.fnPluginCallBack
+    };
+    apz.ns.isAppTokenSet(jsonobj);
+}
+apz.XACBA.fnPluginCallBack = function(params) {
+    if (params.appTokenStatus === "N") {
+        setTimeout(function() {
+            apz.XACBA.fnPluginCall();
+        }, 500);
+    } else {}
+}
+apz.app.onLoad_FirstPage = function(params) {
+    debugger;
+    params["stopLoader"] = false; //flicker issue
+    //    if (apz.deviceType === 'IOS') {
+    //        var json = {
+    //            "id": "DEEPLINK_ID",
+    //            "callBack": apz.XACBA.FirstPage.fnDeepLinkCB
+    //        };
+    //        apz.ns.startDeeplinkListener(json);
+    //    }
+    apz.app.Common.fnShortcut();
+}
+apz.XACBA.FirstPage.fnDeepLinkCB = function(params) {
+    if (params.status === 1) {
+        apz.app.Common.fnSetDeepLinkParams(params);
+    } else {}
+}
+apz.app.onShown_FirstPage = function(params) {
+    $("#page-body").addClass("body-prelogin");
+    $.each($("#scr__XACBA__FirstPage__main input"), function(val, key) {
+        $(key.id).attr("autocomplete", "off");
+    })
+    /*if (apz.deviceType !== 'WEB') {
+        var today = "30/09/2020";
+        apz.setElmValue(firstPageAppId + "datetest", today)
+    }*/
+    if (apz.deviceType !== "WEB") {
+        $("#" + firstPageAppId + "sc_col_2").removeClass("sno");
+        apz.XACBA.FirstPage.funOnDeviceBackPressPreLogin();
+        $("#" + firstPageAppId + "menuBtn").addClass("sno")
+    }
+    if (apz.deviceGroup === "Phone") {
+        $("#" + firstPageAppId + "menuBtn").addClass("sno")
+    }
+    apz.XACBA.FirstPage.SPARAMS = params;
+    $("#" + errmsgID).addClass("sno");
+    if (apz.deviceType === "WEB") {
+        if (apzargs !== "") {
+            DAN_TO_APP = JSON.parse(apzargs.request);
+        } else {}
+        if (DAN_TO_APP.hasOwnProperty("QueryString")) {
+            DAN_TO_APP_QUERYSTRING = JSON.parse('{"' + decodeURIComponent(JSON.parse(apzargs.request).QueryString.replace(/&/g, "\",\"").replace(
+                /=/g, "\":\"")) + '"}')
+            var lQueryString;
+            //if (JSON.parse(apzargs.request).QueryString.split("&")[0].indexOf("Paybil") > 0) {
+            if (DAN_TO_APP_QUERYSTRING.hasOwnProperty("state") && DAN_TO_APP_QUERYSTRING.state.indexOf("Paybil") > -1) {
+                //if (JSON.parse(apzargs.request).QueryString.split("&")[1].split("=")[1] === "WEB") {
+                if (DAN_TO_APP_QUERYSTRING.hasOwnProperty("deviceId") && DAN_TO_APP_QUERYSTRING.deviceId === "WEB") {
+                    DAN_TO_APP_QPAYDEVICEID = "WEB";
+                    /*DAN_TO_APP_STATE = JSON.parse(apzargs.request).QueryString.split("=")[1].split("_")[0];
+                    DAN_TO_APP_USR = JSON.parse(apzargs.request).QueryString.split("=")[1].split("_")[1];
+                    DAN_TO_APP_CODE = JSON.parse(apzargs.request).QueryString.split("=")[1].split("_")[2]*/
+                    //var lQueryString = JSON.parse(apzargs.request).QueryString.split("&")[0].split("=")[1].split("_");
+                    var lQueryString = DAN_TO_APP_QUERYSTRING.state.split("_");
+                    DAN_TO_APP_STATE = lQueryString[0];
+                    DAN_TO_APP_USR = lQueryString.slice(1, lQueryString.length - 1).join("_");
+                    DAN_TO_APP_CODE = lQueryString[lQueryString.length - 1];
+                    if (DAN_TO_APP_QUERYSTRING.hasOwnProperty("fingerprint")) {
+                        DAN_TO_APP_COOKIE = DAN_TO_APP_QUERYSTRING.fingerprint;
+                    }
+                } else {
+                    //DAN_TO_APP_STATE = JSON.parse(apzargs.request).QueryString.split("&")[0].split("=")[1].split("_")[0];
+                    lQueryString = DAN_TO_APP_QUERYSTRING.state.split("_");
+                    DAN_TO_APP_STATE = lQueryString[0];
+                    var msg1 = {
+                        'code': "RB_REDIRECTQPAYSUC",
+                        'callBack': apz.XACBA.FirstPage.refreshPage
+                    };
+                    apz.dispMsg(msg1);
+                    $(".ok").addClass("sno");
+                }
+            } else {
+                if (DAN_TO_APP_QUERYSTRING.hasOwnProperty("state") && DAN_TO_APP_QUERYSTRING.hasOwnProperty("code")) {
+                    /*DAN_TO_APP_STATE = JSON.parse(apzargs.request).QueryString.split("&")[2].split("=")[1];
+                DAN_TO_APP_CODE = JSON.parse(apzargs.request).QueryString.split("&")[0].split("=")[1];*/
+                    DAN_TO_APP_STATE = DAN_TO_APP_QUERYSTRING.state;
+                    DAN_TO_APP_CODE = DAN_TO_APP_QUERYSTRING.code;
+                }
+                /* if (DAN_TO_APP_STATE.split("_")[1] === "WEB") {} else {
+                    var msg1 = {
+                        'code': "RB_REDIRECTSUC",
+                        'callBack': apz.XACBA.FirstPage.formLgnReq
+                    };
+                    apz.dispMsg(msg1);
+                }*/
+            }
+            if (DAN_TO_APP_STATE === "Paybil") {
+                apz.XACBA.FirstPage.LoginforQpay();
+            } else {
+                //if (DAN_TO_APP_STATE.split("_")[0] === "PreAcct") {
+                if (DAN_TO_APP_STATE.indexOf("PreAcct") > -1) {
+                    $("#XACBA__FirstPage__gr_row_1").addClass("sno")
+                    $("#XACBA__FirstPage__launchRow").addClass("sno")
+                    apz.XACBA.FirstPage.fetchDAN();
+                    //} else if (DAN_TO_APP_STATE.split("_")[0] === "Acct") {
+                } else if (DAN_TO_APP_STATE.indexOf("Acct") > -1) {
+                    apz.XACBA.FirstPage.formLgnReq();
+                    //} else if (DAN_TO_APP_STATE.split("_")[0] === "Profile") {
+                } else if (DAN_TO_APP_STATE.indexOf("Profile") > -1) {
+                    apz.XACBA.FirstPage.formLgnReq();
+                } else {
+                    if (DAN_TO_APP_STATE.split("_")[1] === "ANDROID") {
+                        apz.stopLoader();
+                        apz.XACBA.FirstPage.fetchDAN1();
+                    } else {
+                        // apz.startLoader();
+                        //if (DAN_TO_APP_STATE.split("_")[1] === "WEB") {
+                        if (DAN_TO_APP_STATE.indexOf("WEB") > -1) {
+                            apz.startLoader();
+                            apz.XACBA.FirstPage.fn_launchMicroApp("Regist", "Registration", firstPageAppId + "launchRow", apz.XACBA.FirstPage
+                                .SPARAMS);
+                        } else {
+                            apz.stopLoader();
+                            apz.XACBA.FirstPage.fetchDAN1();
+                        }
+                    }
+                }
+            }
+        } else {
+            apz.XACBA.FirstPage.fn_launchLogin(params);
+        }
+    } else {
+        apz.XACBA.FirstPage.fn_launchLogin(params);
+    }
+    /* if (DAN_TO_APP_STATE === "" || (DAN_TO_APP_STATE !== "" && DAN_TO_APP_STATE !== undefined && DAN_TO_APP_STATE.split("_")[1] === "WEB") ||
+        DAN_TO_APP_QPAYDEVICEID === "WEB") {*/
+    if (apz.language === "en") {
+        $("#" + firstPageAppId + "el_btn_2").addClass("active");
+    } else {
+        $("#" + firstPageAppId + "el_btn_1").addClass("active");
+    }
+    /* if (apz.deviceType === "ANDROID") {
+            var lparams = {
+                "id": "EXPIRE_ID",
+                "callBack": apz.XACBA.FirstPage.timerCallback
+            };
+            apz.ns.startIdleTimer(lparams);
+        } else {
+            apz.XACBA.FirstPage.fn_launchLogin(params);
+        }*/
+    //}
+    apz.XACBA.FirstPage.notificationstartListener();
+
+};
+apz.XACBA.FirstPage.notificationstartListener=function(){
+    debugger;
+    if(apz.deviceType !== "WEB"){
+        var json = {};
+        json.id = "NOTIFICATIONSTRTLIST_ID";
+        json.callBack = apz.XACBA.FirstPage.notificationstartListenerCallback;
+        apz.ns.startNotificationListener(json);
+    }
+}
+apz.XACBA.FirstPage.notificationstartListenerCallback=function(params){
+    debugger;
+}
+apz.XACBA.FirstPage.LoginforQpay = function() {
+    if (DAN_TO_APP_COOKIE === apz.app.Common.subStringCookie("ISVALIDURL", 50)) {
+        apz.currAppId = "XACBA";
+        var loginReq = {
+            "userId": DAN_TO_APP_USR,
+            "pwd": "",
+            "scrsAccessType": 'A',
+            "ifacesAccessType": 'A',
+            "controlsAccessType": 'A',
+            "isNewCustomer": "N",
+            "rememberMe": "N",
+            "isDANLogin": "Y",
+            "DANState": DAN_TO_APP_STATE,
+            "callBack": apz.XACBA.FirstPage.formLgnReqCB
+        };
+        apz.server.login(loginReq);
+    } else {
+        //apz.app.clear();
+        var msg1 = {
+            'code': "RB_DANNOT",
+            'callBack': apz.XACBA.FirstPage.refreshPage
+        };
+        apz.dispMsg(msg1);
+    }
+};
+apz.XACBA.FirstPage.fetchDAN = function() {
+    if (apz.deviceType === "" || apz.deviceType === undefined) {
+        apz.deviceType = "WEB";
+    }
+    var lreq = {
+        "processUIRequest": {
+            "DANCustomerRequestObj": {
+                "code": DAN_TO_APP_CODE,
+                "state": DAN_TO_APP_STATE
+            }
+        }
+    };
+    var lServerParam = {
+        "ifaceName": "accountDAN",
+        "buildReq": "N",
+        "req": lreq,
+        "paintResp": "N",
+        "async": true,
+        "callBack": apz.XACBA.FirstPage.afterDANCB
+    };
+    apz.startLoader();
+    apz.server.callServer(lServerParam);
+};
+apz.XACBA.FirstPage.ERR_afterDANCB = function() {
+    if (apz.deviceType === "WEB") {
+        apz.app.Common.resetMyAddressbar();
+    }
+}
+apz.XACBA.FirstPage.fetchDAN1 = function() {
+    if (apz.deviceType === "" || apz.deviceType === undefined) {
+        apz.deviceType = "WEB";
+    }
+    var lreq = {
+        "processUIRequest": {
+            "DANCustomerRequestObj1": {
+                "code": DAN_TO_APP_CODE,
+                "state": DAN_TO_APP_STATE
+            }
+        }
+    };
+    var lServerParam = {
+        "ifaceName": "registationDAN",
+        "buildReq": "N",
+        "req": lreq,
+        "paintResp": "N",
+        "async": true,
+        "callBack": apz.XACBA.FirstPage.ERR_afterDANCB1
+    };
+    apz.startLoader();
+    apz.server.callServer(lServerParam);
+};
+apz.XACBA.FirstPage.ERR_afterDANCB1 = function(params) {
+    apz.XACBA.FirstPage.afterDANCB1resp = params;
+    if (params.status) {
+        if (params.res.XACBA__registationDAN_Res.hasOwnProperty("natIDErr") && params.res.XACBA__registationDAN_Res.natIDErr !== undefined) {
+            var msg1 = {
+                'code': "RB_REDIRECTFAILFORMOBILE",
+                'callBack': apz.XACBA.FirstPage.refreshPage
+            };
+            apz.dispMsg(msg1);
+        } else {
+            if (apz.deviceType === "WEB") {
+                apz.app.Common.resetMyAddressbar();
+            }
+            var msg1 = {
+                'code': "RB_REDIRECTSUC",
+                'callBack': apz.XACBA.FirstPage.refreshPage
+            };
+            apz.dispMsg(msg1);
+        }
+    }
+}
+apz.XACBA.FirstPage.ERR_MobDANCB = function() {
+    var msg = {
+        'code': "RB_DANNOT",
+        'callBack': apz.XACBA.FirstPage.ERR_MobDANCB
+    };
+    apz.dispMsg(msg);
+}
+apz.XACBA.FirstPage.afterDANCB = function(params) {
+    apz.app.Common.resetMyAddressbar();
+    if (params.status) {
+        if (params.errors) {
+            if (params.req.processUIRequest.DANCustomerRequestObj.state.split("_")[1] === "WEB") {
+                var msg = {
+                    'message': params.errors[0].errorMessage,
+                    'callBack': apz.ns.refreshPageCallback
+                };
+                apz.dispMsg(msg);
+                apz.stopLoader();
+            } else {
+                var msg = {
+                    'code': "ERR_NIDERR1",
+                    'callBack': ""
+                };
+                apz.dispMsg(msg);
+            }
+        } else {
+            if (params.res.XACBA__accountDAN_Res.hasOwnProperty("status") && params.res.XACBA__accountDAN_Res.status === false) {
+                if (params.req.processUIRequest.DANCustomerRequestObj.state.split("_")[1] === "WEB") {
+                    var msg = {
+                        'code': "ERR_NIDERR",
+                        'callBack': apz.ns.refreshPageCallback
+                    };
+                    apz.dispMsg(msg);
+                    apz.stopLoader();
+                } else {
+                    var msg = {
+                        'code': "ERR_NIDERR1",
+                        'callBack': ""
+                    };
+                    apz.dispMsg(msg);
+                }
+            } else {
+                apz.XACBA.FirstPage.SPARAMS.getDANCustDetailResponse = params.res.XACBA__accountDAN_Res.getDANCustDetailResponse;
+                apz.XACBA.FirstPage.SPARAMS.existingCustDetails = params.res.XACBA__accountDAN_Res.existingCustDetails;
+                if (params.req.processUIRequest.DANCustomerRequestObj.state.split("_")[1] == "WEB") {
+                    //apz.XACBA.FirstPage.fn_launchMicroApp("prelog", "TermDeposit", firstPageAppId + "launchRow", apz.XACBA.FirstPage.SPARAMS);
+                    if (apz.deviceType === 'WEB' && apz.deviceGroup !== "Phone") {
+                        document.body.classList.remove("body-login-screen");
+                        $("#scr__XACBA__FirstPage__main").removeClass("login-page");
+                    } else {
+                        $("#scr__XACBA__FirstPage__main").removeClass("mobile-login-page");
+                    }
+                    // $("#" + langCol).addClass("sno");
+                    $("#XACBA__FirstPage__preloginlaunchrow").addClass("sno");
+                    $("#XACBA__FirstPage__launchRow").removeClass("sno");
+                    apz.XACBA.FirstPage.fn_launchMicroApp("prelog", "TermDeposit", "XACBA__FirstPage__launchRow", apz.XACBA.FirstPage.SPARAMS);
+                } else {
+                    var msg1 = {
+                        'code': "RB_DANREDIR",
+                        'callBack': ""
+                    };
+                    apz.dispMsg(msg1);
+                    //apz.stopLoader();
+                }
+            }
+        }
+    }
+}
+apz.XACBA.FirstPage.SCS_afterDANCB = function(params) {
+    var msg1 = {
+        'code': "RB_DANREDIR",
+        'callBack': apz.XACBA.FirstPage.SCS_afterDANCB
+    };
+    apz.dispMsg(msg1);
+}
+apz.XACBA.FirstPage.formLgnReqCB = function(resp) {
+    if (resp.status) {
+        apz.XACBA.FirstPage.loginresprefactor1 = resp;
+        var status = resp.resFull.appzillonHeader.status;
+        if (status) {
+            apz.XACBA.FirstPage.loginibCBRefactor1(resp);
+        } else {
+            apz.XACBA.FirstPage.loginibCBRefactor2(resp);
+        }
+    } else {
+        /*if (apz.deviceType !== "WEB") {
+            apz.XACBA.FirstPage.clearMPIN();
+        }
+        apz.app.clear();*/
+        var msg1 = {
+            'code': "APZ-SVR-ERR",
+            'callBack': apz.XACBA.FirstPage.refreshPage
+        };
+        apz.dispMsg(msg1);
+    }
+};
+apz.XACBA.FirstPage.loginibCBRefactor2 = function(resp) {
+    apz.XACBA.FirstPage.loginresprefactor2 = resp;
+}
+apz.XACBA.FirstPage.DANResp = function(params) {
+    apz.XACBA.FirstPage.DANResponse = params;
+    if (DAN_TO_APP_STATE !== "" && DAN_TO_APP_CODE !== "" && DAN_TO_APP_STATE !== undefined && DAN_TO_APP_CODE !== undefined &&
+        DAN_TO_APP_STATE !== null && DAN_TO_APP_CODE !== null && DAN_TO_APP_STATE.split("_")[0] !== "Profile") {
+        apz.XACBA.FirstPage.fn_getLang("mangolia");
+    };
+    if (DAN_TO_APP_STATE.split("_")[1] === "WEB") {
+        if (params.status) {
+            if (params.errors) {
+                var lMsg = {
+                    "code": 'RB_DANNOT',
+                    "callBack": apz.XACBA.FirstPage.ERR_afterDANCB
+                };
+                apz.dispMsg(lMsg);
+                apz.stopLoader();
+            } else {
+                if (params.res.XACBA__DAN_Res.hasOwnProperty("natIDErr") && params.res.XACBA__DAN_Res.natIDErr !== undefined) {
+                    DAN_REDIECT_SUCCESS = false;
+                    var lMsg2 = {
+                        "code": "ERR_NIDERR",
+                        "callBack": apz.XACBA.FirstPage.relaunchlanding
+                    };
+                    apz.dispMsg(lMsg2);
+                    apz.stopLoader();
+                } else {
+                    apz.currAppId = "XACBA";
+                    var loginReq = {
+                        "userId": DAN_TO_APP_STATE.split("_")[2],
+                        "pwd": "",
+                        "scrsAccessType": 'A',
+                        "ifacesAccessType": 'A',
+                        "controlsAccessType": 'A',
+                        "isNewCustomer": "N",
+                        "rememberMe": "N",
+                        "isDANLogin": "Y",
+                        "DANState": DAN_TO_APP_STATE,
+                        "callBack": apz.XACBA.FirstPage.formLgnReqCB
+                    };
+                    apz.server.login(loginReq);
+                }
+            }
+        } else {
+            var loginErrMsg = {
+                "code": "RB_DANNOT",
+                "callBack": apz.XACBA.FirstPage.ERR_afterDANCB
+            };
+            apz.stopLoader();
+        }
+    } else {
+        if (params.status) {
+            if (params.errors) {
+                var lMsg = {
+                    "code": 'RB_DANNOT',
+                    "callBack": apz.XACBA.FirstPage.ERR_afterDANCB
+                };
+                apz.dispMsg(lMsg);
+                apz.stopLoader();
+            } else {
+                if (params.res.XACBA__DAN_Res.hasOwnProperty("natIDErr") && params.res.XACBA__DAN_Res.natIDErr !== undefined) {
+                    var lMsg2 = {
+                        "code": "ERR_NIDERR",
+                        "callBack": ""
+                    };
+                    apz.dispMsg(lMsg2);
+                    apz.stopLoader();
+                } else {
+                    var msg1 = {
+                        'code': "RB_REDIRECTSUC",
+                        'callBack': ""
+                    };
+                    apz.dispMsg(msg1);
+                    apz.stopLoader();
+                }
+            }
+        }
+    }
+};
+apz.XACBA.FirstPage.relaunchlanding = function() {
+    if (apz.deviceType === "WEB") {
+        apz.app.Common.resetMyAddressbar();
+    }
+    apz.currAppId = "XACBA";
+    var loginReq = {
+        "userId": DAN_TO_APP_STATE.split("_")[2],
+        "pwd": "",
+        "scrsAccessType": 'A',
+        "ifacesAccessType": 'A',
+        "controlsAccessType": 'A',
+        "isNewCustomer": "N",
+        "rememberMe": "N",
+        "isDANLogin": "Y",
+        "DANState": DAN_TO_APP_STATE,
+        "callBack": apz.XACBA.FirstPage.formLgnReqCB
+    };
+    apz.server.login(loginReq);
+}
+apz.XACBA.FirstPage.loginibCBRefactor1 = function(resp) {
+    var prespobj = resp.res.loginResponse;
+    if (prespobj.status) {
+        if (resp.req.loginRequest.DANState === "Paybil") {
+            apz.XACBA.FirstPage.loginibCBRefactor1Handler(prespobj);
+        } else {
+            var Name = [];
+            Name = apz.userName.split(" ");
+            if (Name.length > 1) {
+                apz.userName = Name[1];
+            }
+            prespobj.dashboardObj.dandetails = apz.XACBA.FirstPage.DANResponse.res.XACBA__DAN_Res;
+            apz.XACBA.FirstPage.loginibCBRefactor1Handler(prespobj);
+        }
+    } else if (resp.resFull.appzillonBody.captchaErrorStatus) {
+        /*var msg = {
+            'code': "APZ_ERR_CAPTCHA",
+            'callBack': apz.XACBA.FirstPage.stopLoader
+        };
+        apz.dispMsg(msg);
+        if (apz.deviceType !== "WEB") {
+            apz.XACBA.FirstPage.clearMPIN();
+        }
+        apz.app.clear();*/
+        var msg1 = {
+            'code': "APZ-SVR-ERR",
+            'callBack': apz.XACBA.FirstPage.refreshPage
+        };
+        apz.dispMsg(msg1);
+    } else if (resp.res.loginResponse.userMigrated === false) {
+        $("#XACBA__FirstPage__launchRow").empty();
+        apz.XACBA.FirstPage.SPARAMS.prelogin = true;
+        apz.XACBA.FirstPage.fn_launchMicroApp(apz.lits['LOGN01'][apz.language]["XAC_CHGPAS_APPID"], apz.lits['LOGN01'][apz.language][
+            "XAC_CHGPAS_SCRNME"
+        ], "XACBA__FirstPage__launchRow", apz.XACBA.FirstPage.SPARAMS);
+    } else {
+        /*var loginErrMsg = {
+            "msgCode": "ERR_WRONG_CRED_PASSCODE",
+            "callBack": apz.XACBA.FirstPage.clearPASSONLY,
+            "isValid": false
+        };
+        apz.app.Common.showloginErrorMSg(loginErrMsg);
+        apz.XACBA.FirstPage.clearPASSONLY();*/
+        var msg1 = {
+            'code': "APZ-SVR-ERR",
+            'callBack': apz.XACBA.FirstPage.refreshPage
+        };
+        apz.dispMsg(msg1);
+    }
+};
+/**
+ * @Purpose    - Function to load the dashboard response
+ * @Developer  - Tejaswini
+ **/
+apz.XACBA.FirstPage.loginibCBRefactor1Handler = function(prespobj) {
+    if (prespobj.custDetailUpdateFlag) {
+        apz.XACBA.FirstPage.SPARAMS.loginResp = prespobj;
+        apz.resetCurrAppId("XACBA");
+        var json = {
+            "scr": "customerInformation",
+            "div": "LOGN01__Login__custScrLnchRow",
+            "userObj": apz.XACBA.FirstPage.SPARAMS.loginResp
+        };
+        apz.launchScreen(json);
+    } else if (prespobj.dashboardObj.isRegistredDevice) {
+        var lresp = {
+            "custType": prespobj.customerType,
+            "userDet": prespobj.userDet,
+            "dashboardObj": prespobj.dashboardObj,
+            "offlineMode": false
+        };
+        apz.XACBA.FirstPage.fn_callDashboard(lresp);
+    } else {
+        var sendrequest = {
+            "refNo": prespobj.dashboardObj.otpRespObj.generateOTPResponse.RefNo,
+            "isPreLogin": apz.XACBA.FirstPage.isPreLogin,
+            "appId": apz.currAppId,
+            "callBack": apz.XACBA.FirstPage.fnotpCB,
+            "cancelCallback": apz.XACBA.FirstPage.fnLaunchFirstHomePage,
+            "regenCallback": apz.XACBA.FirstPage.funGenerateOtpToValidateUserCallBack,
+            "OtpAction": "GENERATE"
+        };
+        apz.XACBA.FirstPage.SPARAMS = sendrequest;
+        $("#LOGN01__Login__loginRow").addClass("sno");
+        // animation = ANIMATION_FORWARD
+        apz.XACBA.FirstPage.fn_launchMicroApp(apz.lits['LOGN01'][apz.language]["XAC_OTP_APPID"], apz.lits['LOGN01'][apz.language]["XAC_OTP_SCR"],
+            "LOGN01__Login__otplaunchrow", apz.XACBA.FirstPage.SPARAMS);
+    }
+};
+apz.XACBA.FirstPage.fnDashBoardParams = "";
+apz.XACBA.FirstPage.fn_callDashboard = function(loginParams) {
+    apz.stopLoader();
+    if (apz.deviceType === "WEB") {
+        apz.XACBA.FirstPage.fnDashBoardParams = loginParams;
+        apz.XACBA.FirstPage.fnCloseModal();
+    } else {
+        loginParams.loggedIn = true;
+        // animation = ANIMATION_FORWARD;
+        apz.XACBA.FirstPage.fn_loginCallback(loginParams);
+    }
+};
+apz.XACBA.FirstPage.fnCloseModal = function() {
+    apz.XACBA.FirstPage.fnDashBoardParams.loggedIn = true;
+    // animation = ANIMATION_FORWARD;
+    apz.XACBA.FirstPage.fn_loginCallback(apz.XACBA.FirstPage.fnDashBoardParams)
+}
+apz.XACBA.FirstPage.fn_getLang = function(ln) {
+    if (ln === "english") {
+        apz.changeLanguage("en", "XACBA");
+        delete apz.appsMap.LOGN01
+        delete apz.appsMap.prelog
+        delete apz.appsMap.CHGPAS
+        delete apz.appsMap.Regist
+        delete apz.appsMap.otpeng
+        delete apz.appsMap.MenuPr
+        var DefaultLanguage = "English";
+        var DefaultLanguageCode = "en";
+        $("body").removeClass("lang-mangolian");
+        /*$("#XACBA__FirstPage__menuBtnMn").addClass("sno")
+        $("#XACBA__FirstPage__menuBtn").removeClass("sno")*/
+        $("#XACBA__FirstPage__el_btn_2").addClass("active")
+        $("#XACBA__FirstPage__el_btn_1").removeClass("active")
+    } else {
+        /*   $("#XACBA__FirstPage__menuBtnMn").removeClass("sno")
+        $("#XACBA__FirstPage__menuBtn").addClass("sno")*/
+        apz.changeLanguage("mn", "XACBA");
+        delete apz.appsMap.LOGN01
+        delete apz.appsMap.prelog
+        delete apz.appsMap.CHGPAS
+        delete apz.appsMap.Regist
+        delete apz.appsMap.otpeng
+        delete apz.appsMap.MenuPr
+        var DefaultLanguage = "Mongolia";
+        var DefaultLanguageCode = "mn";
+        $("body").addClass("lang-mangolian");
+        $("#XACBA__FirstPage__el_btn_1").addClass("active")
+        $("#XACBA__FirstPage__el_btn_2").removeClass("active")
+    }
+    var navigation = {
+        "setNavigation": apz.XACBA.FirstPage.setNaviCall
+    };
+    var launchAppReq = {};
+    launchAppReq.appId = "XACBA";
+    launchAppReq.scr = "FirstPage";
+    launchAppReq.userObj = {
+        "Navigation": navigation,
+        "customerLogin": true,
+        "isOffline": ISOFFLINE,
+        "loginCallback": apz.XACBA.FirstPage.fn_loginCallback,
+        "lng": apz.language,
+        "customerRegis": ""
+    };
+    launchAppReq.userObj.DefaultLanguage = DefaultLanguage
+    launchAppReq.userObj.DefaultLanguageCode = DefaultLanguageCode
+    //  launchAppReq.userObj.animation = ANIMATION_FORWARD
+    apz.launchScreen(launchAppReq);
+}
+apz.XACBA.FirstPage.timerCallback = function(param) {
+    if ((param.event) == "timerExceeds") {
+        // apz.XACBA.FirstPage.fn_launchLogin(apz.XACBA.FirstPage.SPARAMS);
+    }
+};
+/**
+ * @Purpose    - Function to launch Login MicroApp
+ * @Developer  - Tejaswini
+ **/
+apz.XACBA.FirstPage.fn_launchLogin = function(params) {
+    if (apz.deviceType !== "WEB") {
+        apz.XACBA.FirstPage.funOnDeviceBackPressPreLogin();
+    }
+    if (apz.deviceGroup === "Phone") {
+        $("#" + firstPageAppId + "langCol").removeClass("sno");
+        apz.XACBA.FirstPage.fnHideErrMsg();
+    }
+    var navigation = {
+        "setNavigation": apz.XACBA.FirstPage.setNaviCall
+    };
+    var userObj = {
+        "Navigation": navigation,
+        "customerLogin": true,
+        "isOffline": ISOFFLINE,
+        "loginCallback": apz.XACBA.FirstPage.fn_loginCallback,
+        "lng": apz.language,
+        "customerRegis": "",
+    };
+    if (params !== undefined) {
+        userObj.DefaultLanguage = params.DefaultLanguage;
+        userObj.DefaultLanguageCode = params.DefaultLanguageCode;
+        if (params.customerRegis !== "" || params.customerRegis !== undefined) {
+            userObj.customerRegis = params.customerRegis;
+        }
+    }
+    if (apz.deviceGroup === "Phone") {
+        $("#" + firstPageAppId + "menuBtn").addClass("sno");
+    }
+    apz.store("isMigratedUser", false);
+    // animation = ANIMATION_BACKWARD;
+    $("#XACBA__FirstPage__preloginlaunchrow").addClass("sno");
+    $("#XACBA__FirstPage__launchRow").removeClass("sno");
+    apz.XACBA.FirstPage.fn_launchMicroApp(apz.lits['XACBA']["XAC_LOGIN_APPID"], apz.lits['XACBA']["XAC_LOGIN_SCR"], firstPgeLaunchRow, userObj);
+};
+apz.XACBA.FirstPage.setNaviCall = function(ppram) {
+    if (ppram.backPressed) {
+        apz.XACBA.FirstPage.fnbackPressed = ppram.backPressed;
+    }
+    if (ppram.custLoginFn) {
+        apz.XACBA.FirstPage.nonCustLogin = ppram.custLoginFn;
+    }
+};
+/**
+ * @Purpose    - CallBack Function to launch LandingPage Screen
+ * @Developer  - Tejaswini
+ **/
+apz.XACBA.FirstPage.fn_loginCallback = function(params) {
+    var userObj = {};
+    userObj = params;
+    if (params.loggedIn) {
+        apz.XACBA.FirstPage.fnBackPressFunction = "";
+        if (apz.deviceType !== "WEB") {
+            apz.XACBA.FirstPage.funOffDeviceBackPressforPrelogin();
+        }
+        apz.XACBA.FirstPage.fn_launchScreen("XACBA", "LandingPage", userObj);
+    }
+};
+/**
+ * @Purpose    - Function to launch the MicroApp
+ * @Developer  - Tejaswini
+ **/
+apz.XACBA.FirstPage.fn_launchMicroApp = function(appid, scr, div, userObj) {
+    if (appid !== "LOGN01") {
+        $('#scr__XACBA__FirstPage__main').css('background-image', '');
+        $("#" + firstPageAppId + "sc_row_18").removeClass("sno");
+        $("#" + firstPageAppId + "sc_row_17").addClass("sno");
+        $("body").removeClass("pg-dashboard").removeClass("body-login-screen").addClass("body-prelogin");
+    } else {
+        $("body").addClass("pg-dashboard").addClass("body-login-screen").removeClass("body-prelogin");
+    }
+    var launchAppReq = {
+        "appId": appid,
+        "scr": scr,
+        "div": div,
+        "userObj": userObj,
+    };
+    apz.launchApp(launchAppReq);
+};
+/**
+ * @Purpose    - Function to launch Screen
+ * @Developer  - Tejaswini
+ **/
+apz.XACBA.FirstPage.fn_launchScreen = function(appid, scr, userObj) {
+    apz.resetCurrAppId(appid);
+    var json = {
+        "scr": scr,
+        "userObj": userObj
+    };
+    apz.launchScreen(json);
+};
+/*$('body').bind('copy paste', function(e) {
+    e.preventDefault();
+    return false;
+});*/
+/**
+ * @Purpose    - Function to launch Screen
+ * @Developer  - Tejaswini
+ **/
+apz.XACBA.FirstPage.fnLaunchFirstHomePage = function(params) {
+    $("#XACBA__FirstPage__preloginlaunchrow").addClass("sno");
+    $("#XACBA__FirstPage__preloginlaunchrow").empty();
+    $("#XACBA__FirstPage__launchRow").removeClass("sno");
+    $("#XACBA__FirstPage__sc_col_21").removeClass("sno");
+    if (apz.XACBA.FirstPage.regbacknaigationflag === true) {
+        /*apz.XACBA.FirstPage.fn_launchMicroApp(apz.lits['LOGN01'][apz.language]["XAC_REGS_APPID"], apz.lits['LOGN01'][apz.language]["XAC_REGS_SCR"],
+            firstPgeLaunchRow, apz.LOGN01.Login.SPARAMS);*/
+        $("#" + firstPageAppId + "sc_row_18").addClass("sno");
+        $("#" + firstPageAppId + "sc_row_17").removeClass("sno");
+        apz.XACBA.FirstPage.fn_launchLogin(apz.LOGN01.Login.SPARAMS);
+    } else {
+        $("#" + firstPageAppId + "sc_row_18").addClass("sno");
+        $("#" + firstPageAppId + "sc_row_17").removeClass("sno");
+        apz.XACBA.FirstPage.fn_launchLogin(params);
+    }
+}
+/**
+ * @Purpose    - Function to hide the error msg
+ * @Developer  - Tejaswini
+ **/
+apz.XACBA.FirstPage.fnHideErrMsg = function() {
+    apz.startLoader();
+    apz.hide(firstPageAppId + "errorMsg");
+    $("#LOGN01__Login__MBpwd").removeAttr('readonly');
+    $("#LOGN01__Login__MBusrID").removeAttr('readonly');
+    apz.stopLoader();
+}
+apz.XACBA.FirstPage.getEncriptedText = function(pass) {
+    var key = CryptoJS.enc.Utf8.parse('vhja6T8DYVHF3kaD');
+    var iv = CryptoJS.enc.Utf8.parse('vhja6T8DYVHF3kaD');
+    var encrypted = CryptoJS.AES.encrypt(pass, key, {
+        iv: iv
+    });
+    return encrypted.ciphertext.toString();
+};
+/**
+ * @Purpose    - Function to generate unique ref no
+ * @Developer  - Ashwini Patil
+ **/
+apz.XACBA.FirstPage.generateuniqueRefNoForPreLogin = function() {
+    var ldate = Date.now();
+    var ldateStr = new Date(ldate).toString();
+    var ldateNum = ldateStr.replace(/\D/g, '');
+    var a = ldateNum.substring(0, 2);
+    var res = ldateNum.substring(4, 12);
+    var n = new Date().getMonth();
+    var m = n + 1;
+    var d = new Date();
+    var ms = d.getMilliseconds();
+    return res + m + a + ms;
+}
+/**
+ * @Purpose    - Function to start device  back functionality
+ * @Developer  - Ashwini Patil
+ **/
+apz.XACBA.FirstPage.funOnDeviceBackPressPreLogin = function() {
+    var json = {};
+    json = {
+        "backButtonEvent": "on"
+    }
+    json.callBack = apz.XACBA.FirstPage.funOnDeviceBackPressPreLoginCallback;
+    json.id = "EVENTS_ID";
+    apz.ns.detectEvents(json);
+};
+apz.XACBA.FirstPage.funOnDeviceBackPressPreLoginCallback = function(params) {
+    if (params.status) {
+        apz.XACBA.FirstPage.fnHideErrMsg();
+        if (apz.currAppId === "LOGN01") {
+            if (devicebackcheck) {
+                apz.ns.closeApplication({});
+            } else {
+                apz.XACBA.FirstPage.fnLaunchFirstHomePage();
+            }
+        } else if (apz.currAppId === "prelog" || apz.currAppId === "MenuPr") {
+            apz.XACBA.FirstPage.fnBackPressFunction();
+        } else {
+            apz.XACBA.FirstPage.fn_launchLogin(apz.XACBA.FirstPage.SPARAMS);
+        }
+    }
+}
+/**
+ * @Purpose    - Function to end the device back functionality
+ * @Developer  - Ashwini Patil
+ **/
+apz.XACBA.FirstPage.funOffDeviceBackPressforPrelogin = function() {
+    var json = {};
+    json = {
+        "backButtonEvent": "off"
+    }
+    json.callBack = apz.XACBA.FirstPage.funOffDeviceBackPressforPreloginCallback;
+    json.id = "EVENTS_ID";
+    apz.ns.detectEvents(json);
+};
+apz.XACBA.FirstPage.funOffDeviceBackPressforPreloginCallback = function(params) {
+    if (params.status) {
+        //devicecb
+    }
+}
+apz.XACBA.FirstPage.funToInputAutoCompleteOff = function(autocomplteinputarray) {
+    for (var i = 0; i < autocomplteinputarray.length; i++) {
+        $('#' + autocomplteinputarray[i]).attr('autocomplete', 'off');
+        $('#' + autocomplteinputarray[i]).addClass('autoFillOff');
+        $('#' + autocomplteinputarray[i]).addClass('autoFillOff');
+        $(".autoFillOff").focus(function() {
+            $(this).removeAttr('readonly');
+        });
+        $(".autoFillOff").blur(function() {
+            $(this).attr('readonly', 'readonly');
+        });
+    }
+}
+apz.XACBA.FirstPage.LaunchPreloginMenus = function(pthis) {
+    $("#" + firstPageAppId + "launchRow").empty();
+    $("#XACBA__FirstPage__backbuttonrow").removeClass("sno");
+    $("#XACBA__FirstPage__gr_row_1").removeClass("sno");
+    if (apz.deviceType === 'WEB' && apz.deviceGroup !== "Phone") {
+        document.body.classList.remove("body-login-screen");
+        $("#scr__XACBA__FirstPage__main").removeClass("login-page");
+    } else {
+        $("#scr__XACBA__FirstPage__main").removeClass("mobile-login-page");
+    }
+    apz.XACBA.FirstPage.SPARAMS.Ident = "";
+    if (pthis.innerText.trim() === apz.lits['XACBA']["RB_PRECALC"]) {
+        apz.XACBA.FirstPage.fn_launchMicroApp("MenuPr", "calculator", firstPageAppId + "launchRow", apz.XACBA.FirstPage.SPARAMS);
+    }
+    if (pthis.innerText.trim() === apz.lits['XACBA']["RB_PRELOCAT"]) {
+        apz.XACBA.FirstPage.fn_launchMicroApp("MenuPr", "LocationDetector", firstPageAppId + "launchRow", apz.XACBA.FirstPage.SPARAMS);
+    }
+    if (pthis.innerText.trim() === apz.lits['XACBA']["RB_PRECONTACT"]) {
+        apz.XACBA.FirstPage.fn_launchMicroApp("MenuPr", "ContactScreen", firstPageAppId + "launchRow", apz.XACBA.FirstPage.SPARAMS);
+    }
+    if (pthis.innerText.trim() === apz.lits['XACBA']["RB_PRECURREX"]) {
+        apz.XACBA.FirstPage.SPARAMS.Ident = "curr";
+        apz.XACBA.FirstPage.fn_launchMicroApp("MenuPr", "calculator", firstPageAppId + "launchRow", apz.XACBA.FirstPage.SPARAMS);
+    }
+}
+apz.XACBA.FirstPage.formLgnReq = function() {
+    if (apz.userExtId === undefined) {
+        apz.userExtId = ""
+    }
+    if (apz.deviceType === "" || apz.deviceType === undefined) {
+        apz.deviceType = "WEB"
+    }
+    var lreq = {
+        processUIRequest: {
+            DANCustomerRequestObj: {
+                code: DAN_TO_APP_CODE,
+                state: DAN_TO_APP_STATE,
+                mobNo: "",
+                emailId: "",
+                oldmobNo: "",
+                oldemail: "",
+                updateFor: "mobno",
+                appId: apz.appId,
+                langId: apz.language,
+                userId: DAN_TO_APP_STATE.split("_")[2],
+                customerId: apz.userExtId,
+                ImgBase64: "",
+                fromfirstPage: "Y",
+                deviceType: apz.deviceType,
+                uniqRefNo: DAN_TO_APP_STATE
+            }
+        }
+    };
+    var lServerParam = {
+        ifaceName: "DAN",
+        buildReq: "N",
+        req: lreq,
+        paintResp: "N",
+        async: true,
+        callBack: apz.XACBA.FirstPage.DANResp
+    };
+    apz.startLoader();
+    apz.server.callServer(lServerParam)
+};
+apz.XACBA.FirstPage.fnLogout = function() {
+    var lparams = {
+        "targetId": "LOGN01__customerInformation__confrm_modal"
+    };
+    apz.toggleModal(lparams);
+};
+apz.XACBA.FirstPage.fnclearLogout = function(params) {
+    if (params === undefined || params === "true") {
+        setTimeout(function() {
+            apz.XACBA.FirstPage.fnLogoutconfirmCB(true);
+        }, 20);
+    }
+};
+apz.XACBA.FirstPage.fnLogoutconfirmCB = function(presp) {
+    var params = {
+        "userId": apz.userId,
+        "appId": apz.appId,
+        "callBack": apz.XACBA.FirstPage.fnLogoutCb
+    };
+    apz.startLoader();
+    setTimeout(function() {
+        apz.server.logout(params);
+    }, 20);
+};
+apz.XACBA.FirstPage.fnLogoutCb = function(params) {
+    apz.app.Common.fnstopShortcut();
+    if (params.resFull.appzillonHeader.status) {
+        if (apz.deviceType === "WEB") {
+            apz.ns.refreshPageCallback();
+        } else {
+            apz.XACBA.FirstPage.LaunchFirstPage();
+            apz.stopLoader();
+        }
+    }
+    
+};
+apz.XACBA.FirstPage.LaunchFirstPage = function() {
+    var launchAppReq = {
+        "appId": apz.appId,
+        "scr": "FirstPage",
+        "userObj": {
+            "logout": true
+        }
+    };
+    apz.launchScreen(launchAppReq);
+}
+var STOREURL = "";
+apz.XACBA.FirstPage.getAppversion = function() {
+    if (apz.deviceType !== "WEB") {
+        var json = {};
+        json.id = "APPVERSION";
+        json.callBack = apz.XACBA.FirstPage.validateAppInfo;
+        json.appId = apz.appId;
+        apz.ns.getAppVersion(json)
+    }
+};
+apz.XACBA.FirstPage.validateAppInfo = function(params) {
+    if (!apz.isNull(params.appVersion)) {
+        var lreq = {
+            "getAppInfo": {
+                "appversion": params.appVersion
+            }
+        };
+        var lServerParam = {
+            "appId": apz.appId,
+            "ifaceName": "ForceupdateValidator",
+            "buildReq": "N",
+            "req": lreq,
+            "paintResp": "N",
+            "async": false,
+            "callBack": apz.XACBA.FirstPage.validateAppInfoCB
+        };
+        //apz.startLoader();
+        apz.server.callServer(lServerParam);
+    }
+};
+apz.XACBA.FirstPage.validateAppInfoCB = function(params) {
+    apz.stopLoader();
+    if (params.status) {
+        if (params.errors) {
+            var msg = {
+                'code': "APZ-SVR-ERR",
+                'callBack': ""
+            };
+            apz.dispMsg(msg);
+        } else {
+            if (params.res.XACBA__ForceupdateValidator_Res.status === true) {
+                STOREURL = params.res.XACBA__ForceupdateValidator_Res.url;
+                apz.XACBA.FirstPage.appStorePopup();
+            } else {
+                apz.XACBA.FirstPage.fnCheckOTAUpdate();
+            }
+        }
+    }
+}
+apz.XACBA.FirstPage.appStorePopup = function() {
+    var msg = {
+        'message': 'Updating your apps gives you access to the latest features and improves app security and stability. Click OK will automatically redirect to app store.',
+        'callBack': apz.XACBA.FirstPage.updateAppfromStore
+    };
+    apz.dispMsg(msg);
+}
+apz.XACBA.FirstPage.updateAppfromStore = function(params) {
+    var lparam = {};
+    lparam.id = apz.appId;
+    lparam.url = STOREURL
+    lparam.callBack = apz.XACBA.FirstPage.updateAppfromStoreCB;
+    apz.ns.openUrl(lparam);
+}
+apz.XACBA.FirstPage.updateAppfromStoreCB = function(param) {
+    if (apz.deviceType === "ANDROID") {
+        var lparam = {};
+        lparam.id = apz.appId;
+        apz.ns.closeApplication(lparam);
+    } else {
+        apz.XACBA.FirstPage.appStorePopup();
+    }
+};
+/*==================================== OAT UPDATE CALL =====================================*/
+apz.XACBA.FirstPage.fnCheckOTAUpdate = function() {
+    if (apz.deviceType !== "WEB") {
+        //apz.startLoader();
+        apz.XACBA.FirstPage.otadata = {};
+        var lreq = {};
+        lreq.appId = apz.appId;
+        lreq.id = "APPVERSION";
+        lreq.callBack = apz.XACBA.FirstPage.fnUpdateAppCallback;
+        apz.ns.getInstructions(lreq);
+    }
+};
+apz.XACBA.FirstPage.fnUpdateAppCallback = function(params) {
+    apz.XACBA.FirstPage.otadata = !apz.isNull(params.appDetails) ? params.appDetails : params;
+    if (apz.XACBA.FirstPage.otadata.otaReq == 'Y') {
+        var req = {};
+        req.appId = apz.appId;
+        req.callBack = apz.XACBA.FirstPage.fnVersionCallback;
+        apz.ns.getAppVersion(req);
+    } else {
+        apz.stopLoader();
+    }
+};
+apz.XACBA.FirstPage.fnVersionCallback = function(params) {
+    if (apz.XACBA.FirstPage.otadata.appVersion != params.appVersion) {
+        apz.XACBA.FirstPage.otadata.appId = apz.appId;
+        apz.XACBA.FirstPage.otadata.callBack = apz.XACBA.FirstPage.fnVersionUPCB
+        apz.ns.upgradeApp(apz.XACBA.FirstPage.otadata);
+    } else {
+        apz.stopLoader();
+    }
+};
+apz.XACBA.FirstPage.fnVersionUPCB = function(params) {
+    apz.XACBA.FirstPage.UpResp = params;
+    apz.stopLoader();
+    if (params.status == false) {
+        if (params.errorCode != undefined) {
+            var reason = apz.msgs["XACBA"][apz.XACBA.FirstPage.UpResp.errorCode].split(' ');
+            reason[0] = reason[0].substring(1);
+            reason = reason.join(" ");
+            apz.XACBA.FirstPage.reason = reason;
+        }
+    } else {
+        apz.XACBA.FirstPage.reason = "";
+    }
+};

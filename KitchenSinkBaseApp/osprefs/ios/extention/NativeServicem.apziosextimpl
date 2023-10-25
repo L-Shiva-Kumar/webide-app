@@ -1,0 +1,327 @@
+#import "NativeService.h"
+#import "AppzillonViewController.h"
+#import "APZJsonUtil.h"
+#import <KitchenSinkBaseApp-Swift.h>
+
+
+@interface NativeService()
+@property(nonatomic,weak)AppzillonViewController *viewController;
+@property(nonatomic,weak)WKWebView *webView;
+@property(nonatomic,strong)NSString *pluginId;
+
+//ScreenShot Image Properties
+@property(strong,nonatomic)NSString *fileJsonPath;
+@property(strong,nonatomic)NSString *fileCreateFileName;
+@property(strong,nonatomic)NSString *fileExtension;
+@property (nonatomic, strong) UIImage *screenShotImage;
+@property(strong,nonatomic) NSData *imageData;
+@property(strong,nonatomic) NSMutableData *mutableImageData;
+
+@end
+
+@implementation NativeService
+
+-(void)execute:(NSDictionary *)jsonDict wbView:(WKWebView *)webView{
+    self.viewController = [MiscellaneousMethod.shared getAppzillonViewController];
+    self.webView = webView;
+    self.pluginId=[jsonDict objectForKey:PLUGINID];
+    
+    //Custom Native plugin Execution logic here, Pass ViewController & webview from here
+    if ([[jsonDict objectForKey:@"action"] isEqual:@"tridum"]) {
+        [self esignInURLDirectionwith:jsonDict];
+    }
+    else if ([[jsonDict objectForKey:@"action"] isEqual:@"takeScreenshot"]){
+        //To take Screenshot
+        UIGraphicsBeginImageContextWithOptions(self.viewController.view.bounds.size, NO, [UIScreen mainScreen].scale);
+        CGRect rect = CGRectMake(0, 0, self.viewController.view.bounds.size.width, self.viewController.view.bounds.size.height);
+        [self.viewController.view drawViewHierarchyInRect:rect afterScreenUpdates:YES];
+        self.screenShotImage = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+        
+        //To remove status bar height
+        self.screenShotImage = [self captureRectOfScreen:rect :self.screenShotImage];
+        
+        CGFloat startX = [[jsonDict objectForKey:@"ssStartX"] floatValue];
+        if (startX==0) {
+            startX = 0;
+        }
+        
+        CGFloat startY = [[jsonDict objectForKey:@"ssStartY"] floatValue];
+        if (startY==0) {
+            startY = 0;
+        }
+        
+        CGFloat sHeight = [[jsonDict objectForKey:@"ssHeight"] floatValue];
+        if (sHeight==0) {
+            sHeight = self.viewController.view.frame.size.height;
+        }
+        
+        CGFloat sWidth = [[jsonDict objectForKey:@"ssWidth"] floatValue];
+        if (sWidth==0) {
+            sWidth = self.viewController.view.frame.size.width;
+        }
+        
+        ////        //To crop the image with given Custom Rect
+        CGRect cropRect = CGRectMake(startX, startY, sWidth, sHeight);//set your rect size.
+        self.screenShotImage = [self croppIngimageByImageName:self.screenShotImage toRect:cropRect];
+        
+        //To compress with given quality
+        NSString *quality=[jsonDict objectForKey:@"quality"];
+        if (quality==nil || [quality isEqualToString:@""]) {
+            quality =@"100";
+        }
+        CGFloat commpressionRate= ([quality floatValue])/100;
+        if ([[jsonDict objectForKey:@"encodingType"] isEqual:@"PNG"]) {
+            self.fileExtension = @"png";
+            self.imageData=UIImagePNGRepresentation(self.screenShotImage);
+            self.mutableImageData =(NSMutableData *)UIImagePNGRepresentation(self.screenShotImage);
+        }
+        else if ([[jsonDict objectForKey:@"encodingType"] isEqual:@"JPEG"]){
+            self.fileExtension = @"jpeg";
+            self.imageData=UIImageJPEGRepresentation(self.screenShotImage, commpressionRate);
+            self.mutableImageData =(NSMutableData *)UIImageJPEGRepresentation(self.screenShotImage, commpressionRate);
+        }
+        //Image File Creation
+        self.fileCreateFileName = [jsonDict objectForKey:@"fileName"];
+        if (![self.fileJsonPath isEqualToString:@""] || ![self.fileCreateFileName isEqualToString:@""]) {
+            [self fileCreate];
+        }
+    }else if([[jsonDict objectForKey:@"action"] isEqual:@"deeplink"]){
+        [self navigateToApp:jsonDict];
+    }
+}
+
+
+
+#pragma mark - E-SIGN  SDK Implementation
+-(void)esignInURLDirectionwith:(NSDictionary *)jsonDict{
+    // Send data that needs to digital sign
+    NSString* message = @"";
+    if ([jsonDict objectForKey:@"message"]) {
+        message = [jsonDict objectForKey:@"message"];
+    }
+    UIPasteboard *thepaste = [UIPasteboard generalPasteboard];
+    NSString *url = @"";
+    NSArray *stringArray = @[message, url];
+    thepaste.strings = stringArray ;
+    NSString *customURL = @"tridumpass://";
+    if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:customURL]]){
+        
+        // Add an observer that will respond to tridumKeyOpen
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(onAppWillEnterForeground:)
+                                                     name:@"tridumKeyOpen" object:nil];
+        //the URL of tridumkey application (Calling TridumKey application).
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:customURL]];
+    }
+    else{
+        NSArray *resultkeys=[NSArray arrayWithObjects:ERROR_CODE,@"errorMessage",nil];
+        NSArray *result=[NSArray arrayWithObjects:@"APZ-CNT-400",@"tridumpass cannot open",nil];
+        [MiscellaneousMethod.shared jsLayerCallWithWebView:self.webView jsFunctionName:JSCALLBACKMEHTOD parameter:[APZJsonUtil createResponseJSONString:self.pluginId :false :false :resultkeys :result]];
+        [self cleanPlugin];
+    }
+}
+
+
+////Getting digital signature from TridumKey application
+-(void)onAppWillEnterForeground:(NSNotification*)notification {
+    UIPasteboard* pasteboard = [UIPasteboard generalPasteboard];
+    NSArray* nsar = pasteboard.strings;
+    if (nsar != nil && [nsar count] == 2) {
+        //It gets 2 response from tridumkey application which are digital signature and certificate
+        
+        //        NSString *val = [NSString stringWithFormat:@"cordova.fireDocumentEvent('signed', {res:'%@', cert:'%@'});", nsar[0], nsar[1]];
+        //[self.commandDelegate evalJs:val];
+        
+        NSString *signature = nsar[0];
+        NSString *certificate = nsar[1];
+        NSArray *resultkeys=[NSArray arrayWithObjects:@"SIGNED",@"CERTIFICATE",nil];
+        NSArray *result=[NSArray arrayWithObjects:signature,certificate ,nil];
+        [MiscellaneousMethod.shared jsLayerCallWithWebView:self.webView jsFunctionName:JSCALLBACKMEHTOD parameter:[APZJsonUtil createResponseJSONString:self.pluginId :true :false :resultkeys :result]];
+        
+        //clearing pasteboard.
+        pasteboard.string = @"" ;
+    }
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+
+
+#pragma mark - To Remove Status Bar Height of ScreenShot
+-(UIImage *) captureRectOfScreen:(CGRect) rect :(UIImage *)screenshot
+{
+    UIImage *wholeScreen = screenshot;
+    
+    //Add status bar height
+    rect.origin.y += UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation) ? [[UIApplication sharedApplication] statusBarFrame].size.width : [[UIApplication sharedApplication] statusBarFrame].size.height;
+    
+    //NSLog(@"%@",NSStringFromCGSize([wholeScreen size]));
+    
+    CGFloat scale = wholeScreen.scale;
+    
+    rect.origin.x *= scale;
+    rect.origin.y *= scale;
+    rect.size.width *= scale;
+    rect.size.height *= scale;
+    
+    UIImage *cropped = [UIImage imageWithCGImage:CGImageCreateWithImageInRect([wholeScreen CGImage], rect) scale:wholeScreen.scale orientation:wholeScreen.imageOrientation];
+    
+    return cropped;
+}
+
+#pragma mark - To Crop Final Image with Custom Output
+- (UIImage *)croppIngimageByImageName:(UIImage *)imageToCrop toRect:(CGRect)rect
+{
+    UIImage *wholeScreen = imageToCrop;
+    
+    CGFloat scale = imageToCrop.scale;
+    
+    rect.origin.x *= scale;
+    rect.origin.y *= scale;
+    rect.size.width *= scale;
+    rect.size.height *= scale;
+    
+    UIImage *cropped = [UIImage imageWithCGImage:CGImageCreateWithImageInRect([wholeScreen CGImage], rect) scale:wholeScreen.scale orientation:wholeScreen.imageOrientation];
+    
+    return cropped;
+}
+
+#pragma mark FileCreate/Modify
+-(void)fileCreate{
+    NSString *filePath = [self fileOpnPath:self.fileCreateFileName];
+    filePath = [filePath stringByAppendingString:[NSString stringWithFormat:@".%@",self.fileExtension]];
+    if([filePath isEqualToString:@""] == NO){
+        if([[NSFileManager defaultManager] fileExistsAtPath:filePath] ){
+            [self fileModify:filePath];
+        }else{
+            [self createImageFile:filePath];
+        }
+    }
+}
+
+#pragma mark create File Method
+-(void)createImageFile:(NSString*)filePath{
+    if ([self.imageData writeToFile:filePath atomically:YES]){
+        NSArray *resultkeys=[NSArray arrayWithObjects:@"filePath",nil];
+        NSArray *result=[NSArray arrayWithObjects:filePath,nil];
+        [MiscellaneousMethod.shared jsLayerCallWithWebView:self.webView jsFunctionName:JSCALLBACKMEHTOD parameter:[APZJsonUtil createResponseJSONString:self.pluginId :true :false :resultkeys :result]];
+        [self cleanPlugin];
+    }else{
+        NSArray * resultkeys=[NSArray arrayWithObjects:ERROR_CODE,nil];
+        NSArray *resultMsg=[NSArray arrayWithObjects:FILE_COULD_NOT_CREATED,nil];
+        [MiscellaneousMethod.shared jsLayerCallWithWebView:self.webView jsFunctionName:JSCALLBACKMEHTOD parameter:[APZJsonUtil createResponseJSONString:self.pluginId :false :false :resultkeys :resultMsg]];
+        [self cleanPlugin];
+    }
+}
+
+-(NSString *)fileOpnPath:(NSString *)fileName{
+    NSString *fileOpnDir = [self fileOpnDirectory];
+    NSString *filePath =nil;
+    if( [fileOpnDir isEqualToString:@""] == NO){
+        NSError *error;
+        //to keep only one recent file everytime
+        bool isPreviousFilesDeleted =  [[NSFileManager defaultManager] removeItemAtPath:fileOpnDir error:&error];
+        if (isPreviousFilesDeleted) {
+            [[NSFileManager defaultManager] createDirectoryAtPath:fileOpnDir withIntermediateDirectories:YES attributes:nil error:NULL];
+            filePath = [fileOpnDir stringByAppendingPathComponent:fileName];
+        }
+    }
+    else{
+        filePath = @"";
+    }
+    return filePath;
+}
+
+-(NSString *)fileOpnDirectory{
+    NSArray *dirPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString* appzillonAppSandbox=[[dirPaths objectAtIndex:0] stringByAppendingPathComponent:@"Assets/apps"];
+    NSString* fileOpnDir;
+    self.fileJsonPath = @"TempFolderScreenshot";
+    if([self.fileJsonPath isEqualToString:@""] ||self.fileJsonPath==NULL){
+        fileOpnDir=[appzillonAppSandbox stringByAppendingFormat:@"/%@/",self.viewController.appString];
+    }else{
+        fileOpnDir=[appzillonAppSandbox stringByAppendingFormat:@"/%@/%@",self.viewController.appString,self.fileJsonPath];
+    }
+    [[NSFileManager defaultManager] createDirectoryAtPath:fileOpnDir withIntermediateDirectories:YES attributes:nil error:NULL];
+    return fileOpnDir;
+}
+
+-(void)fileModify:(NSString *)filePath{
+    //NSMutableData *imageData = (NSMutableData *)UIImageJPEGRepresentation(self.screenShotImage, 1.0);
+    NSKeyedArchiver *archiver = [[NSKeyedArchiver alloc]initForWritingWithMutableData:self.mutableImageData];
+    [archiver encodeObject:self.mutableImageData forKey:@"filepath"];
+    [archiver finishEncoding];
+    BOOL isFileModified =[[NSFileManager defaultManager] createFileAtPath:filePath contents:self.mutableImageData attributes:nil];
+    if(isFileModified){
+        NSArray *resultkeys=[NSArray arrayWithObjects:CBTEXT,nil];
+        NSArray *result=[NSArray arrayWithObjects:filePath,nil];
+        [MiscellaneousMethod.shared jsLayerCallWithWebView:self.webView jsFunctionName:JSCALLBACKMEHTOD parameter:[APZJsonUtil createResponseJSONString:self.pluginId :true :false :resultkeys :result]];
+        [self cleanPlugin];
+    }
+    else{
+        NSArray * resultkeys=[NSArray arrayWithObjects:ERROR_CODE,nil];
+        NSArray *resultMsg=[NSArray arrayWithObjects:FILEOP_MODIFY_FAIL,nil];
+        [MiscellaneousMethod.shared jsLayerCallWithWebView:self.webView jsFunctionName:JSCALLBACKMEHTOD parameter:[APZJsonUtil createResponseJSONString:self.pluginId :false :false :resultkeys :resultMsg]];
+        [self cleanPlugin];
+    }
+}
+#pragma mark -DeepLink
+
+-(void)navigateToApp:(NSDictionary *)jsonDict{
+    
+    NSURL * appUrl = [self createUrlWithParams:jsonDict];
+    if(appUrl != nil){
+        [[UIApplication sharedApplication] openURL:appUrl options:@{} completionHandler:^(BOOL success){
+            if(success){
+                NSArray *resultkeys=[NSArray arrayWithObjects: @"Callback url",nil];
+                NSArray *result=[NSArray arrayWithObjects:appUrl.absoluteString,nil];
+                [MiscellaneousMethod.shared jsLayerCallWithWebView:self.webView jsFunctionName:JSCALLBACKMEHTOD parameter:[APZJsonUtil createResponseJSONString:self.pluginId :true :false :resultkeys :result]];
+            }
+            else{
+                NSArray *resultkeys=[NSArray arrayWithObjects: @"error",nil];
+                NSArray *result=[NSArray arrayWithObjects:@"Unable to naviagte to app",nil];
+                [MiscellaneousMethod.shared jsLayerCallWithWebView:self.webView jsFunctionName:JSCALLBACKMEHTOD parameter:[APZJsonUtil createResponseJSONString:self.pluginId :true :false :resultkeys :result]];
+                
+            }
+        }];
+    }else{
+        NSArray *resultkeys=[NSArray arrayWithObjects: @"error",nil];
+        NSArray *result=[NSArray arrayWithObjects:@"Package name is not available",nil];
+        [MiscellaneousMethod.shared jsLayerCallWithWebView:self.webView jsFunctionName:JSCALLBACKMEHTOD parameter:[APZJsonUtil createResponseJSONString:self.pluginId :true :false :resultkeys :result]];
+    }
+    
+    
+    
+}
+
+-(NSURL*)createUrlWithParams:(NSDictionary *)jsonDict{
+    
+    if([jsonDict objectForKey:@"packageName"] != nil && ![[jsonDict objectForKey:@"packageName"] isEqualToString:@""]){
+        
+        NSString *customURL = [NSString stringWithFormat:@"%@://",[jsonDict objectForKey:@"packageName"]];
+        
+        NSMutableArray *queryItems = [NSMutableArray array];
+        NSDictionary* queryDictionary =  [jsonDict objectForKey:@"queryParams"];
+        
+        for (NSString *key in queryDictionary) {
+            [queryItems addObject:[NSURLQueryItem queryItemWithName:key value:queryDictionary[key]]];
+        }
+        
+        NSURLComponents *components = [NSURLComponents componentsWithString:customURL];
+        components.queryItems = queryItems;
+        components.host = [jsonDict objectForKey:@"host"];
+        NSURL* appUrl = components.URL;
+        return  appUrl;
+    }
+    else {
+        return nil;
+    }
+}
+
+
+#pragma mark -Plugin Clean
+-(void)cleanPlugin{
+    self.webView = nil;
+}
+
+@end

@@ -1,0 +1,3187 @@
+apz.XACBA.LandingPage = {};
+apz.XACBA.LandingPage.SPARAMS = "";
+var ISOFFLINE = false;
+var LNG = "en";
+var rFlag;
+var DEFAULT_LNG = "english";
+var USERID = "";
+var PWD = "";
+var animation;
+var ANIMATION_BACKWARD = 0;
+var ANIMATION_FORWARD = 0;
+var CURRALLOWED = ["MNT", "USD", "CAD", "EUR", "AUD", "CNY", "JPY", "RUB", "GBP", "KRW"];
+var ACCTYPE = ["BLA", "CASA", "DEPOSIT", "LOAN", "OVERDRAFT", "SAVINGS"];
+apz.XACBA.LandingPage.DSDREFRESHCALL = "N";
+apz.XACBA.LandingPage.firstTimeLogin = "true";
+var t;
+var LandingPageBaseId = "XACBA__LandingPage__";
+var rowno;
+var fromMoreMenu;
+var MenuClose = "";
+var flag = false;
+apz.XACBA.LandingPage.roleAlwdScreensList = [];
+apz.XACBA.LandingPage.dashboardActiveAccounts = [];
+apz.XACBA.LandingPage.customerRole = "";
+apz.XACBA.LandingPage.showBack = false;
+apz.XACBA.LandingPage.servBack = "";
+var popoverdata = 'bs.popover';
+apz.XACBA.LandingPage.imageBasePath = "";
+var CALL_BACK = "";
+apz.XACBA.LandingPage.idindex;
+apz.XACBA.LandingPage.dashboardFlag = false;
+apz.XACBA.LandingPage.fromDashToAllAccounts = false;
+apz.XACBA.LandingPage.NotifyCounts = 0
+//apz.XACBA.LandingPage.gcustomerRole = "admin";
+$(document).ready(function() {
+    if (apz.deviceType === 'IOS') {
+        $(" .iosnumber").removeAttr('onfocus', 'apz.changeTypeToNumber(this)');
+        $(':input[type="number"]').attr('type', 'tel');
+    }
+ /*   $(':input').live('focus', function() {
+        $(this).attr('autocomplete', 'off');
+    }); */
+});
+apz.XACBA.LandingPage.startNetworkListener = function() {
+    var jsonobj = {};
+    jsonobj.id = "NW_LISTENER";
+    jsonobj.callBack = apz.XACBA.LandingPage.startNetworkListenerCallBack;
+    apz.ns.startNetworkListener(jsonobj);
+}
+apz.XACBA.LandingPage.startNetworkListenerCallBack = function(params) {
+    debugger;
+    if (params.event === "off") {
+        apz.dispMsg({
+            'code': 'APZ_INTERNETERROR'
+        });
+        flag = true;
+    } else {
+        if (flag === true) {
+            apz.dispMsg({
+                'code': 'APZ_INTERNETCONNECTED'
+            })
+        }
+    }
+}
+var oState;
+apz.app.onShown_LandingPage = function(params) {
+    debugger;
+    if(apz.deviceType === 'WEB'){
+        $("#XACBA__LandingPage__el_btn_61").addClass("sno")
+        $("#XACBA__LandingPage__el_btn_63").addClass("sno")
+    }else if(apz.deviceType != 'WEB'){
+        oldState = apz.retrieve("orientationState");
+        if (oldState === 'D'){
+                  $("#XACBA__LandingPage__el_btn_61").addClass("sno")
+                $("#XACBA__LandingPage__el_btn_63").addClass("sno")  
+        }else{
+         $("#XACBA__LandingPage__el_btn_61").removeClass("sno")
+        $("#XACBA__LandingPage__el_btn_63").removeClass("sno")
+        }
+    }
+    $("#XACBA__LandingPage__sc_col_11").attr("onclick", "apz.XACBA.LandingPage.fnClickprofileImg()");
+    $("#page-body").removeClass("body-prelogin");
+    $("body").removeClass("body-login-screen");
+    $("#XACBA__LandingPage__accountsBreadcrumb").addClass("sno");
+    //apz.XACBA.LandingPage.SPARAMS = params;
+    var userobj = {
+        "loggedIn": apz.XACBA.LandingPage.SPARAMS.loggedIn,
+        "offlineMode": apz.XACBA.LandingPage.SPARAMS.isOffline,
+        "isOffline": ISOFFLINE,
+        "lng": apz.language
+    };
+    apz.XACBA.LandingPage.SPARAMS = userobj;
+    userobj.Navigation = {};
+    userobj.Navigation.setNavigation = apz.XACBA.LandingPage.fnSetNavigation;
+    userobj.Navigation.sendMenuParams = apz.XACBA.LandingPage.fnMenuNav;
+    var appName = decodeURIComponent(window.location.href).split("/")[3]
+    if (apz.deviceType === "WEB") {
+        apz.XACBA.LandingPage.imageBasePath = "/" + appName + "/apps/styles/themes/" + apz.theme + "/img/";
+    } else if (apz.deviceType === 'IOS') {
+        apz.XACBA.LandingPage.imageBasePath = "apps/styles/themes/" + apz.theme + "/img/";
+    } else {
+        apz.XACBA.LandingPage.imageBasePath = "/android_asset/apps/styles/themes/" + apz.theme + "/img/"
+    }
+    if (params.hasOwnProperty("dashboardObj")) {
+        if (params.hasOwnProperty("launchRC")) {
+            userobj.dashboardObj = params;
+        } else {
+            userobj.dashboardObj = params.dashboardObj;
+        }
+    } else if (params.hasOwnProperty("launchRC")) {
+        userobj.dashboardObj = params;
+    } else if (params.hasOwnProperty("launchProfile")) {
+        userobj.dashboardObj = params;
+    } else {
+        userobj.dashboardObj = params;
+    }
+    userobj.displayMsgFn = apz.XACBA.LandingPage.fnDisplayMsg;
+    userobj.userDetail = params.userDet;
+    userobj.offlineMode = params.offlineMode;
+    if (userobj.dashboardObj.roleAlwdScreensList) {
+        apz.XACBA.LandingPage.customerRole = userobj.dashboardObj.customerRole;
+        apz.XACBA.LandingPage.roleAlwdScreensList = userobj.dashboardObj.roleAlwdScreensList;
+    }
+    var userName;
+    if (apz.deviceType !== "WEB") {
+        if (apz.userName.length > 15) {
+            userName = apz.userName.substring(0, 15) + "...";
+        } else {
+            userName = apz.userName;
+        }
+    } else {
+        userName = apz.userName;
+    }
+    apz.setElmValue("XACBA__LandingPage__username", userName);
+    if (userobj.dashboardObj.CustomerProfileDtls.hasOwnProperty("fetchCustomerProfileDtls")) {
+        if (userobj.dashboardObj.CustomerProfileDtls.fetchCustomerProfileDtls.hasOwnProperty("lCustImg") && userobj.dashboardObj
+            .CustomerProfileDtls.fetchCustomerProfileDtls.lCustImg !== undefined) {
+            if (!apz.isNull(userobj.dashboardObj.CustomerProfileDtls.fetchCustomerProfileDtls.lCustImg)) {
+                apz.setElmValue(LandingPageBaseId + "el_img_2", userobj.dashboardObj.CustomerProfileDtls.fetchCustomerProfileDtls.lCustImg);
+            }
+        }
+    };
+    //apz.XACBA.LandingPage.refactor1(params, userobj);
+    apz.XACBA.LandingPage.fnInitialise();
+    if (apz.deviceGroup === "Phone") {
+        if (apz.deviceType === "ANDROID") {
+            apz.XACBA.LandingPage.funOnDeviceBackPress();
+        }
+        /*$("#" + LandingPageBaseId + "xaclogoMbNav").removeClass("sno");
+        $("#" + LandingPageBaseId + "xaclogoIbNav").addClass("sno");
+        $("#" + LandingPageBaseId + "headrForMB").removeClass("sno");
+        $("#" + LandingPageBaseId + "sidebarController").addClass("sno");*/
+        $("#" + LandingPageBaseId + "ct_lst_2").removeClass("sno");
+        $("#" + LandingPageBaseId + "ct_lst_1_row_4").addClass("sno");
+        $("#page-body").addClass("mobile-dashboard-bg");
+    } else {
+        $("#" + LandingPageBaseId + "ct_lst_1_row_4").removeClass("sno");
+        if (apz.deviceGroup === "IPAD") {
+            $("#page-body").addClass("mobile-dashboard-bg");
+        } else {
+            $("#page-body").removeClass("mobile-dashboard-bg");
+        }
+        /*$("#" + LandingPageBaseId + "xaclogoMbNav").addClass("sno");
+        $("#" + LandingPageBaseId + "xaclogoIbNav").removeClass("sno");
+        $("#" + LandingPageBaseId + "headrForMB").addClass("sno");
+        $("#" + LandingPageBaseId + "sidebarController").removeClass("sno");*/
+    }
+    /*  if (apz.XACBA.LandingPage.SPARAMS.dashboardObj.isTxnPassCodeAvlable === true) {
+        $("#" + LandingPageBaseId + "settingsMenu_row_7").addClass("sno");
+    } else {
+        $("#" + LandingPageBaseId + "settingsMenu_row_7").removeClass("sno");
+    }*/
+    /* if (apz.deviceType === "WEB" && apz.deviceGroup !== "Phone") {
+        if (apz.XACBA.LandingPage.SPARAMS.dashboardObj.CustomerProfileDtls.hasOwnProperty("fetchCustomerProfileDtls")) {
+            if (apz.XACBA.LandingPage.SPARAMS.dashboardObj.CustomerProfileDtls.fetchCustomerProfileDtls.hasOwnProperty("lCustImg") && apz.XACBA.LandingPage
+                .SPARAMS.dashboardObj.CustomerProfileDtls.fetchCustomerProfileDtls.lCustImg !== undefined) {
+                if (!apz.isNull(apz.XACBA.LandingPage.SPARAMS.dashboardObj.CustomerProfileDtls.fetchCustomerProfileDtls.lCustImg)) {
+                    apz.setElmValue("XACBA__LandingPage__el_img_2", apz.XACBA.LandingPage.SPARAMS.dashboardObj.CustomerProfileDtls.fetchCustomerProfileDtls
+                        .lCustImg);
+                }
+            }
+        };
+    } else {
+        if (apz.XACBA.LandingPage.SPARAMS.dashboardObj.CustomerProfileDtls.hasOwnProperty("fetchCustomerProfileDtls")) {
+            if (apz.XACBA.LandingPage.SPARAMS.dashboardObj.CustomerProfileDtls.fetchCustomerProfileDtls.hasOwnProperty("lCustImg") && apz.XACBA.LandingPage
+                .SPARAMS.dashboardObj.CustomerProfileDtls.fetchCustomerProfileDtls.lCustImg !== undefined) {
+                if (!apz.isNull(apz.XACBA.LandingPage.SPARAMS.dashboardObj.CustomerProfileDtls.fetchCustomerProfileDtls.lCustImg)) {
+                    apz.setElmValue("XACBA__LandingPage__el_img_2", apz.XACBA.LandingPage.SPARAMS.dashboardObj.CustomerProfileDtls.fetchCustomerProfileDtls
+                        .lCustImg);
+                }
+            }
+        }
+    }*/
+    apz.XACBA.LandingPage.dashboardFlag = true;
+    apz.XACBA.LandingPage.fn_loadAccountsList();
+    userobj = apz.XACBA.LandingPage.fnSetSelectedAccObj(userobj);
+    apz.XACBA.LandingPage.USEROBJ = userobj;
+    apz.XACBA.LandingPage.SPARAMS = userobj;
+    if (apz.app.Common.deepLinkFlag) {
+        if (apz.deviceType !== "WEB") {
+            apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_QPAY'], apz.XACBA.LandingPage.USEROBJ, true);
+        }
+    }
+    debugger;
+    // shortcut Items
+    if (shortClickFlag) {
+        shortClickFlag = false;
+        console.log("shortcutIDObj.shortcutID : " + shortcutIDObj.shortcutID);
+        if (shortcutIDObj.shortcutID != undefined) {
+            if (shortcutIDObj.shortcutID == "ACCOUNTDETAILSID") {
+                apz.XACBA.LandingPage.fnMenuNav("accounts", "", true);
+            } else if (shortcutIDObj.shortcutID == "QUICKPAYID") {
+                $("#XACBA__LandingPage__ct_lst_1_row_2").trigger("click");
+            } else if (shortcutIDObj.shortcutID == "TRANSFERESID") {
+                $("#XACBA__LandingPage__ct_lst_1_row_0").trigger("click");
+            }
+        }
+    }
+    if (apz.deviceType !== "WEB") {
+        apz.XACBA.LandingPage.startNetworkListener();
+//	 apz.XACBA.LandingPage.gestureResponse();
+    } else {}
+};
+apz.XACBA.LandingPage.fnInitialise = function() {
+    apz.store(fromMoreMenu, "");
+    var filePath = "";
+    filePath = apz.getDataFilesPath("XACBA") + "/" + "MenuQuickLinks.json";
+    var content = apz.getFile(filePath);
+    if (!apz.isNull(content)) {
+        content = JSON.parse(content);
+    }
+    apz.data.scrdata.XACBA__MenuQuickLinks_Req = {};
+    apz.data.scrdata.XACBA__MenuQuickLinks_Req.quicklinks = [];
+    apz.data.scrdata.XACBA__MenuQuickLinks_Req.moreMenu = [];
+    if (apz.language === "en") {
+        apz.data.scrdata.XACBA__MenuQuickLinks_Req.quicklinks = content.quicklinks;
+        apz.data.scrdata.XACBA__MenuQuickLinks_Req.moreMenu = content.moreMenu;
+    } else {
+        apz.data.scrdata.XACBA__MenuQuickLinks_Req.quicklinks = content.quicklinksMn;
+        apz.data.scrdata.XACBA__MenuQuickLinks_Req.moreMenu = content.moreMenuMn;
+    }
+    apz.data.loadData("MenuQuickLinks", "XACBA");
+    $.each(apz.data.scrdata.XACBA__MenuQuickLinks_Req.quicklinks, function(id, val) {
+        $("#XACBA__LandingPage__el_btn_13_" + id).append('<svg class="ett-icon' + apz.data.scrdata.XACBA__MenuQuickLinks_Req.quicklinks[
+                id].icon + '  px24 "><use xlink:href="#' + apz.data.scrdata.XACBA__MenuQuickLinks_Req.quicklinks[id].icon +
+            '"></use></svg>');
+    });
+    $.each(apz.data.scrdata.XACBA__MenuQuickLinks_Req.moreMenu, function(id, val) {
+        $("#XACBA__LandingPage__el_btn_40_" + id).append('<svg class="ett-icon' + apz.data.scrdata.XACBA__MenuQuickLinks_Req.moreMenu[id]
+            .icon + '  px24 "><use xlink:href="#' + apz.data.scrdata.XACBA__MenuQuickLinks_Req.moreMenu[id].icon + '"></use></svg>');
+    });
+    /*var arrID = ["XACBA__LandingPage__sc_col_19_li", "XACBA__LandingPage__sc_col_22_li", "XACBA__LandingPage__sc_col_23_li",
+        "XACBA__LandingPage__sc_col_34_li", "XACBA__LandingPage__sc_col_39_li", "XACBA__LandingPage__sc_col_86_li",
+        "XACBA__LandingPage__sc_col_87_li", "XACBA__LandingPage__sc_col_88_li", "XACBA__LandingPage__sc_col_89_li",
+        "XACBA__LandingPage__sc_col_91_li", "XACBA__LandingPage__sc_col_90_li", "XACBA__LandingPage__sc_col_85_li"
+    ]
+    var IDfunction = ["apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_DOMESTICTRANS'], apz.XACBA.LandingPage.USEROBJ,true);",
+        "apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_MYBILL'], apz.XACBA.LandingPage.USEROBJ,true);",
+        "apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_DOMESTICTRANS'], apz.XACBA.LandingPage.USEROBJ,true);",
+        "apz.XACBA.LandingPage.fnServiceMenuLoad('QpayMenu');",
+        "apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['XAC_CARDS'], apz.XACBA.LandingPage.USEROBJ,true);",
+        "apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_CALCULATOR'], apz.XACBA.LandingPage.USEROBJ,true);",
+        "apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_SPENDANALYSE'], apz.XACBA.LandingPage.USEROBJ,true);",
+        "apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_CONTACTUS'], apz.XACBA.LandingPage.USEROBJ,true);",
+        "apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_LOCATIONS'], apz.XACBA.LandingPage.USEROBJ,true);",
+        "apz.XACBA.LandingPage.fn_launchMicroApp('Messag', 'MailboxScreen', 'XACBA__LandingPage__launchRow', apz.XACBA.LandingPage.SPARAMS,true);",
+        "apz.XACBA.LandingPage.fnServiceMenuLoad('settings');", "apz.XACBA.LandingPage.fnServiceMenuLoad('services');"
+    ]
+    $.map(arrID, function(id, val) {
+        $("#" + id).attr("onclick", IDfunction[val])
+    });*/
+};
+apz.XACBA.LandingPage.fnListMenuQuickMore = function(lst, pthis) {
+    var rowNo = $(pthis).attr("rowNo");
+    apz.XACBA.LandingPage.SPARAMS.msscreen = "";
+    if (lst === "ct_lst_1") {
+        if (rowNo === "0") {
+            if (apz.XACBA.LandingPage.validateScrAccessForRole("trnnav", "TransferMenu", apz.XACBA.LandingPage.USEROBJ)) {
+                apz.XACBA.LandingPage.LaunBtn();
+                apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_DOMESTICTRANS'], apz.XACBA.LandingPage.USEROBJ, true);
+            } else {
+                apz.XACBA.LandingPage.noroleaccs()
+            }
+        } else if (rowNo === "1") {
+            if (apz.XACBA.LandingPage.validateScrAccessForRole("bilpay", "BillPaymentLanding", apz.XACBA.LandingPage.USEROBJ)) {
+                apz.XACBA.LandingPage.LaunBtn();
+                apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_MYBILL'], apz.XACBA.LandingPage.USEROBJ, true);
+            } else {
+                apz.XACBA.LandingPage.noroleaccs()
+            }
+            /*var lmsg = {
+                'code': 'AX_INF_COMING_SOON',
+                'callBack': ""
+            };
+            apz.dispMsg(lmsg);*/
+        } else if (rowNo === "2") {
+            if (apz.XACBA.LandingPage.validateScrAccessForRole("Paybil", "Paybill_settings", apz.XACBA.LandingPage.USEROBJ)) {
+                apz.XACBA.LandingPage.LaunBtn();
+                if (apz.deviceType !== "WEB") {
+                    apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_QPAY'], apz.XACBA.LandingPage.USEROBJ, true);
+                } else {
+                    apz.XACBA.LandingPage.fnServiceMenuLoad('QpayMenu');
+                }
+            } else {
+                apz.XACBA.LandingPage.noroleaccs()
+            }
+            /*var lmsg1 = {
+                'code': 'AX_INF_COMING_SOON',
+                'callBack': ""
+            };
+            apz.dispMsg(lmsg1);*/
+        } else if (rowNo === "3") {
+            if (apz.XACBA.LandingPage.validateScrAccessForRole("QRCode", "QRGeneration", apz.XACBA.LandingPage.USEROBJ)) {
+                apz.XACBA.LandingPage.LaunBtn();
+                apz.XACBA.LandingPage.SPARAMS.msscreen = "QRGeneration";
+                apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_QRGENERATION'], apz.XACBA.LandingPage.USEROBJ, true);
+            } else {
+                apz.XACBA.LandingPage.noroleaccs()
+            }
+        } else if (rowNo === "4") {
+            if (apz.XACBA.LandingPage.validateScrAccessForRole("Cards", "DebitCreditList", apz.XACBA.LandingPage.USEROBJ)) {
+                apz.XACBA.LandingPage.LaunBtn();
+                apz.XACBA.LandingPage.SPARAMS.Carddirect = false;
+                apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['XAC_CARDS'], apz.XACBA.LandingPage.USEROBJ, true);
+            } else {
+                apz.XACBA.LandingPage.noroleaccs()
+            }
+        }
+    } else {
+        if (rowNo === "0") {
+            apz.XACBA.LandingPage.LaunBtn();
+            apz.XACBA.LandingPage.fnServiceMenuLoad('services');
+            apz.store(fromMoreMenu, "services");
+        } else if (rowNo === "1") {
+            if (apz.XACBA.LandingPage.validateScrAccessForRole("calcul", "calculator", apz.XACBA.LandingPage.USEROBJ)) {
+                apz.XACBA.LandingPage.LaunBtn();
+                apz.store(fromMoreMenu, "More");
+                apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_CALCULATOR'], apz.XACBA.LandingPage.USEROBJ, true);
+            } else {
+                apz.XACBA.LandingPage.noroleaccs()
+            }
+        } else if (rowNo === "2") {
+            if (apz.XACBA.LandingPage.validateScrAccessForRole("SpendA", "spendanalyser", apz.XACBA.LandingPage.USEROBJ)) {
+                apz.XACBA.LandingPage.LaunBtn();
+                apz.store(fromMoreMenu, "More");
+                apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_SPENDANALYSE'], apz.XACBA.LandingPage.USEROBJ, true);
+            } else {
+                apz.XACBA.LandingPage.noroleaccs()
+            }
+            /*var lmsg1 = {
+                'code': 'AX_INF_COMING_SOON',
+                'callBack': ""
+            };
+            apz.dispMsg(lmsg1);*/
+        } else if (rowNo === "3") {
+            if (apz.XACBA.LandingPage.validateScrAccessForRole("Contac", "ContactScreen", apz.XACBA.LandingPage.USEROBJ)) {
+                apz.XACBA.LandingPage.LaunBtn();
+                apz.store(fromMoreMenu, "More");
+                apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_CONTACTUS'], apz.XACBA.LandingPage.USEROBJ, true);
+            } else {
+                apz.XACBA.LandingPage.noroleaccs()
+            }
+        } else if (rowNo === "4") {
+            if (apz.XACBA.LandingPage.validateScrAccessForRole("locatr", "LocationDetector", apz.XACBA.LandingPage.USEROBJ)) {
+                apz.XACBA.LandingPage.LaunBtn();
+                apz.store(fromMoreMenu, "More");
+                apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_LOCATIONS'], apz.XACBA.LandingPage.USEROBJ, true);
+            } else {
+                apz.XACBA.LandingPage.noroleaccs()
+            }
+        } else if (rowNo === "5") {
+            apz.XACBA.LandingPage.LaunBtn();
+            apz.XACBA.LandingPage.fnServiceMenuLoad('settings');
+            apz.store(fromMoreMenu, "settings");
+        } else if (rowNo === "6") {
+            if (apz.XACBA.LandingPage.validateScrAccessForRole("Messag", "MailboxScreen", apz.XACBA.LandingPage.USEROBJ)) {
+                apz.XACBA.LandingPage.LaunBtn();
+                apz.store(fromMoreMenu, "More");
+                apz.XACBA.LandingPage.fn_launchMicroApp('Messag', 'MailboxScreen', 'XACBA__LandingPage__launchRow', apz.XACBA.LandingPage.SPARAMS,
+                    true);
+            } else {
+                apz.XACBA.LandingPage.noroleaccs()
+            }
+        } else if (rowNo === "7") {
+            if (apz.XACBA.LandingPage.validateScrAccessForRole("FAQ", "FAQScreen", apz.XACBA.LandingPage.USEROBJ)) {
+                apz.XACBA.LandingPage.LaunBtn();
+                apz.store(fromMoreMenu, "More");
+                apz.XACBA.LandingPage.fn_launchMicroApp('FAQ', 'FAQScreen', 'XACBA__LandingPage__launchRow', apz.XACBA.LandingPage.SPARAMS, true);
+            } else {
+                apz.XACBA.LandingPage.noroleaccs()
+            }
+        } else if (rowNo === "8") {
+            if (apz.XACBA.LandingPage.validateScrAccessForRole("manual", "ManualFiles", apz.XACBA.LandingPage.USEROBJ)) {
+                apz.XACBA.LandingPage.LaunBtn();
+                apz.store(fromMoreMenu, "More");
+                apz.XACBA.LandingPage.fn_launchMicroApp('manual', 'ManualFiles', 'XACBA__LandingPage__launchRow', apz.XACBA.LandingPage.SPARAMS,
+                    true);
+            }
+        }
+    }
+}
+//for customer role new
+apz.XACBA.LandingPage.populateEsignType = function() {
+    apz.currAppId = "XACBA";
+    if (apz.XACBA.LandingPage.customerRole == "new") {
+        // accType = "TDRegular"; Commented for reference
+        // accClass = "TD10";
+        var lReq = {
+            "processUIRequest": {
+                "AccOpenReq": {
+                    "regNo": apz.userExtId,
+                    "langId": apz.language,
+                    "AccClass": "",
+                    "branch": "CHO",
+                    "currency": "MNT",
+                    "nationalId": apz.XACBA.LandingPage.SPARAMS.dashboardObj.nationalId,
+                    "accType": "",
+                    "customerRole": apz.XACBA.LandingPage.customerRole
+                }
+            }
+        }
+        var lServerParam = {
+            "ifaceName": "TDOpen",
+            "buildReq": "N",
+            "req": lReq,
+            "paintResp": "N",
+            "async": false,
+            "callBack": apz.XACBA.LandingPage.getDetCB
+        };
+        apz.server.callServer(lServerParam);
+    }
+}
+apz.XACBA.LandingPage.getDetCB = function(params) {
+    //to get and show modal if required
+    if (params.status) {
+        if (params.errors) {
+            if (params.errors[0].errorCode != "$APZ-SMS-EX-003") {
+                apz.dispMsg({
+                    "message": params.errors[0].errorMessage
+                    //"callBack": apz.newacc.OpenNewDeposit.directHome
+                });
+            } else {
+                apz.app.logout();
+            }
+        } else {
+            var esignArr = [];
+            var custStatus = params.res.XACBA__TDOpen_Res.onboardingProcessComplete;
+            //apz.newacc.OpenNewDeposit.custBranch = params.res.newacc__TDOpen_Res.midName;
+            apz.XACBA.LandingPage.branchDate = params.res.XACBA__TDOpen_Res.branchDate;
+            apz.XACBA.LandingPage.SPARAMS.existingDet = params.res.XACBA__TDOpen_Res.existingdetail;
+            apz.XACBA.LandingPage.SPARAMS.existingDet.onboardingProcessComplete = custStatus;
+            if (custStatus == "N") {
+                if (apz.XACBA.LandingPage.SPARAMS.existingDet.cardOrDep == "CARD") {
+                    $("#XACBA__LandingPage__el_cbx_8").closest("li").addClass("sno");
+                    $("#XACBA__LandingPage__el_cbx_7").closest("li").removeClass("sno");
+                } else {
+                    /*$("#XACBA__LandingPage__depSelRow").removeClass("sno");
+                    $("#XACBA__LandingPage__cardSelRow").addClass("sno");*/
+                    $("#XACBA__LandingPage__el_cbx_8").closest("li").removeClass("sno");
+                    $("#XACBA__LandingPage__el_cbx_7").closest("li").addClass("sno");
+                }
+                apz.toggleModal({
+                    "targetId": "XACBA__LandingPage__allowBookModal"
+                })
+                //apz.stopLoader();
+                /* var esignObj = {};
+                esignObj.esignType = [];
+                // currencyArr = currencyAr;
+                esignArr = esignArr.filter(function(item, index, inputArray) {
+                    return inputArray.indexOf(item) === index;
+                });
+                for (var i = 0; i < esignArr.length; i++) {
+                    if (esignArr[i] === apz.lits['XACBA']["RB_BOOKLATER"]) {
+                        id = "BK";
+                    } else {
+                        id = "NW"
+                    }
+                    var obj = {
+                        "type": esignArr[i],
+                        "id": id
+                    };
+                    esignObj.esignType.push(obj);
+                }
+                apz.data.scrdata.XACBA__FetchTenor_Req = {};
+                apz.data.scrdata.XACBA__FetchTenor_Req.esignType = esignObj.esignType;
+                apz.data.loadData("FetchTenor", "XACBA");
+                apz.toggleModal({
+                    "targetId":"XACBA__LandingPage__allowBookModal"
+                })
+                apz.stopLoader();*/
+            } else {
+                /*apz.stopLoader();
+                apz.XACBA.LandingPage.fn_launchMicroApp("dashbd", "DashBoard", "XACBA__LandingPage__launchRow", apz.XACBA.LandingPage.SPARAMS);*/
+            }
+        }
+    } else {
+        if (params.code === 'APZ-SVR-ERR') {
+            apz.XACBA.LandingPage.LaunchFirstPage();
+        }
+    }
+}
+apz.XACBA.LandingPage.chooseProcessType = function(type) {
+    $("#XACBA__LandingPage__ct_lst_14 .active").removeClass('active');
+    if (type == "cardp") {
+        apz.XACBA.LandingPage.SPARAMS.processChosen = "card";
+        $("#XACBA__LandingPage__el_cbx_7").prop("checked", true);
+        $("#XACBA__LandingPage__el_cbx_7").closest("li").addClass("active");
+        $("#XACBA__LandingPage__el_cbx_8").prop("checked", false);
+        $("#XACBA__LandingPage__el_cbx_9").prop("checked", false);
+    } else if (type == "depp") {
+        apz.XACBA.LandingPage.SPARAMS.processChosen = "dep";
+        $("#XACBA__LandingPage__el_cbx_8").prop("checked", true);
+        $("#XACBA__LandingPage__el_cbx_8").closest("li").addClass("active");
+        $("#XACBA__LandingPage__el_cbx_7").prop("checked", false);
+        $("#XACBA__LandingPage__el_cbx_9").prop("checked", false);
+    } else if (type == "book") {
+        apz.XACBA.LandingPage.SPARAMS.processChosen = "booklater";
+        $("#XACBA__LandingPage__el_cbx_9").prop("checked", true);
+        $("#XACBA__LandingPage__el_cbx_9").closest("li").addClass("active");
+        $("#XACBA__LandingPage__el_cbx_7").prop("checked", false);
+        $("#XACBA__LandingPage__el_cbx_8").prop("checked", false);
+    } else {
+        apz.XACBA.LandingPage.SPARAMS.processChosen = "";
+        $("#XACBA__LandingPage__el_cbx_9").prop("checked", false);
+        $("#XACBA__LandingPage__el_cbx_7").prop("checked", false);
+        $("#XACBA__LandingPage__el_cbx_8").prop("checked", false);
+    }
+    /* var selProcess = $("#" + pthis.id).text();
+    var selProcessId = pthis.id;
+    apz.XACBA.LandingPage.SPARAMS.processChosen = selProcess;
+    var rowNo = $(pthis).attr("rowNo");
+    $("#XACBA__LandingPage__allowBookModal .active").removeClass('active');
+    $("#XACBA__LandingPage__ct_lst_5_row_" + rowNo).addClass('active');
+    $("#XACBA__LandingPage__ct_lst_5_ul").addClass("currency-slct");*/
+}
+apz.XACBA.LandingPage.authOk = function() {
+    if (apz.XACBA.LandingPage.SPARAMS.processChosen == "" || apz.XACBA.LandingPage.SPARAMS.processChosen == undefined) {
+        apz.dispMsg({
+            "code": "ERR_SELECTVALUE"
+        })
+    } else {
+        apz.toggleModal({
+            "targetId": "XACBA__LandingPage__allowBookModal"
+        });
+        if ($('#XACBA__LandingPage__promotionModel').css('display') != 'none') {
+            var toggleMod = {
+                "targetId": "XACBA__LandingPage__promotionModel"
+            }
+            apz.toggleModal(toggleMod);
+        }
+        apz.XACBA.LandingPage.SPARAMS.screen = "LandingPage";
+        if (apz.XACBA.LandingPage.SPARAMS.processChosen == "card") {
+            apz.XACBA.LandingPage.SPARAMS.cardtype = "P";
+            apz.XACBA.LandingPage.fn_launchMicroApp("Cards", "ApplyDebCd", apz.appId + "__LandingPage__launchRow", apz.XACBA.LandingPage.SPARAMS,
+                true);
+        } else if (apz.XACBA.LandingPage.SPARAMS.processChosen == "dep") {
+            //apz.XACBA.LandingPage.fn_launchMicroApp("newacc", "OpenNewDeposit", "XACBA__LandingPage__launchRow", apz.XACBA.LandingPage.SPARAMS);
+            apz.XACBA.LandingPage.fn_launchMicroApp("newacc", "OpenNewDeposit", apz.appId + "__LandingPage__launchRow", apz.XACBA.LandingPage
+                .SPARAMS, true);
+            //apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['XAC_DEP'], apz.XACBA.LandingPage.USEROBJ, true);
+        }
+    }
+}
+/**
+ * @purpose - Function to show header contents based on screen params
+ * @Developer - Tejaswini
+ **/
+apz.XACBA.LandingPage.fnSetNavigation = function(params) {
+    window.scrollTo(0, 0);
+    if (params.showMainHeader && params.showMainHeader === "Y") {
+        /*if (apz.deviceGroup === "Phone") {
+            apz.XACBA.LandingPage.showBack = true;
+            $("#" + LandingPageBaseId + "titleheaderMB").removeClass("sno");
+        } else {
+            $("#" + LandingPageBaseId + "titleheader").removeClass("sno");
+        }*/
+        $("#" + LandingPageBaseId + "backButton").removeClass("sno");
+    } else {
+        /*if (apz.deviceGroup === "Phone") {
+            $("#" + LandingPageBaseId + "titleheaderMB").addClass("sno");
+        } else {
+            $("#" + LandingPageBaseId + "titleheader").addClass("sno");
+        }*/
+        $("#" + LandingPageBaseId + "backButton").addClass("sno");
+    }
+    apz.XACBA.LandingPage.navRefactor1(params);
+    apz.XACBA.LandingPage.navRefactor2(params);
+};
+apz.XACBA.LandingPage.navRefactor1 = function(params) {
+    /*if (params.showNotifiBtn && params.showNotifiBtn === "Y") {
+         apz.showElement("XACBA__LandingPage__notificationbtn");
+        apz.showElement("XACBA__LandingPage__notificationbtnMb");
+       
+    } else {
+        apz.hideElement("XACBA__LandingPage__notificationbtn");
+        apz.hideElement("XACBA__LandingPage__notificationbtnMb");
+        
+    }*/
+    if (params.headingLIT /* && params.headingLIT === "Y"*/ ) {
+        /* apz.showElement("XACBA__LandingPage__notificationbtn");
+        apz.showElement("XACBA__LandingPage__notificationbtnMb");*/
+        apz.setElmValue(LandingPageBaseId + "headerTitle", params.headingLIT);
+    } else {
+        apz.setElmValue(LandingPageBaseId + "headerTitle", "");
+    }
+    if (params.showUserImg && params.showUserImg === "Y") {
+        if (apz.deviceGroup === "Phone") {
+            apz.showElement("XACBA__LandingPage__userImgMB");
+        } else {
+            apz.showElement("XACBA__LandingPage__userImg");
+        }
+    } else {
+        if (apz.deviceGroup === "Phone") {
+            apz.hideElement("XACBA__LandingPage__userImgMB");
+        } else {
+            apz.hideElement("XACBA__LandingPage__userImg");
+        }
+    }
+    if (params.showBankIcon && params.showBankIcon === "Y") {
+        if (apz.deviceType === "WEB" && apz.deviceGroup !== "Phone") {
+            $("#" + LandingPageBaseId + "xacimg_row").removeClass("sno");
+        } else {
+            $("#" + LandingPageBaseId + "xacimg_row_MB").removeClass("sno");
+        }
+    } else {
+        if (apz.deviceType === "WEB" && apz.deviceGroup !== "Phone") {
+            $("#" + LandingPageBaseId + "xacimg_row").addClass("sno");
+        } else {
+            $("#" + LandingPageBaseId + "xacimg_row_MB").addClass("sno");
+        }
+    }
+    if (apz.deviceGroup === "Phone") {
+        if (params.showHomeBtn && params.showHomeBtn === "Y") {
+            $("#XACBA__LandingPage__HomeButton").removeClass("sno");
+            $("#XACBA__LandingPage__notificationbtnIB").addClass("sno");
+            $("#XACBA__LandingPage__logoutBtnIB").addClass("sno");
+            $("#XACBA__LandingPage__logoutBtnIB").addClass("sno");
+        } else {
+            $("#XACBA__LandingPage__logoutBtnIB").removeClass("sno");
+            $("#XACBA__LandingPage__notificationbtnIB").addClass("sno");
+            $("#XACBA__LandingPage__HomeButton").addClass("sno");
+            $("#XACBA__LandingPage__logoutBtn").addClass("sno");
+        }
+    }
+}
+apz.XACBA.LandingPage.navRefactor2 = function(params) {
+    if (params.backPressed) {
+        animation = ANIMATION_BACKWARD
+        apz.XACBA.LandingPage.fnBackPressed = params.backPressed;
+    }
+    /*if (params.directHome) {
+        // $("#XACBA__LandingPage__openChatWindow").removeClass("sno")
+        animation = ANIMATION_FORWARD
+        apz.XACBA.LandingPage.fnLaunchDashBoard = params.directHome;
+    }*/
+    if (params.MenuClick) {
+        animation = ANIMATION_FORWARD
+        apz.XACBA.LandingPage.fnClickMenu = params.MenuClick;
+    }
+}
+apz.XACBA.LandingPage.fnBackPressed = function() {
+    //  window.scrollTop(0);
+    window.scrollTo(0, 0);
+    //TO-DO
+};
+apz.XACBA.LandingPage.fnLaunchDashBoard = function() {
+    //$("#XACBA__LandingPage__openChatWindow").removeClass("sno")
+    //TO-DO
+    if (apz.deviceType !== "WEB") {
+        apz.XACBA.LandingPage.funOnDeviceBackPress();
+    }
+};
+apz.XACBA.LandingPage.fnBackPressed = function() {
+    //TO-DO
+};
+apz.XACBA.LandingPage.fnClickMenu = function() {
+    //TO-DO
+};
+apz.XACBA.LandingPage.fnMessage = function() {
+    if (apz.deviceType !== "WEB") {
+        apz.dashbd.DashBoard.closeSideMenu();
+    }
+    apz.XACBA.LandingPage.fn_launchMicroApp("Messag", "MailboxScreen", "XACBA__LandingPage__launchRow", apz.XACBA.LandingPage.SPARAMS);
+}
+apz.XACBA.LandingPage.refactor1 = function(params, userobj) {
+    if (apz.deviceType !== "WEB") {
+        $("#sidebar").removeClass("apz-nav-open");
+    }
+    animation = ANIMATION_FORWARD;
+    if (DAN_TO_APP_STATE !== "" || DAN_TO_APP_CODE !== "") {
+        if (DAN_TO_APP_STATE.split("_")[0] === "Profile") {
+            apz.XACBA.LandingPage.fn_launchMicroApp("Profil", "profile", "XACBA__LandingPage__launchRow", apz.XACBA.LandingPage.SPARAMS);
+        } else if (DAN_TO_APP_STATE === "Paybil") {
+            apz.XACBA.LandingPage.fn_launchMicroApp("Paybil", "Settings", "XACBA__LandingPage__launchRow", apz.XACBA.LandingPage.SPARAMS);
+        } else {
+            apz.XACBA.LandingPage.fn_launchMicroApp("newacc", "FutureMillionaire", "XACBA__LandingPage__launchRow", apz.XACBA.LandingPage
+            .SPARAMS);
+        }
+    } else if (params.hasOwnProperty("launchProfile")) {
+        apz.XACBA.LandingPage.fn_launchMicroApp("Profil", "profile", "XACBA__LandingPage__launchRow", userobj);
+    } else {
+        // $("#XACBA__LandingPage__openChatWindow").removeClass("sno")
+        if (apz.XACBA.LandingPage.customerRole == "new") {
+            apz.startLoader();
+            apz.XACBA.LandingPage.populateEsignType();
+        } else {
+            apz.startLoader();
+            apz.XACBA.LandingPage.fn_launchMicroApp("dashbd", "DashBoard", "XACBA__LandingPage__launchRow", userobj);
+        }
+    }
+    apz.XACBA.LandingPage.refactor2(params);
+};
+apz.XACBA.LandingPage.refactor2 = function() {
+    var lparams = {
+        "id": "EXPIRE_ID",
+        "callBack": apz.XACBA.LandingPage.timerCallback
+    };
+    if (apz.deviceType !== "WEB") {
+        apz.ns.startIdleTimer(lparams);
+    } else {
+        apz.app.inactivityTime();
+    }
+}
+apz.app.inactivityTime = function() {
+    window.onload = apz.app.resetTimer;
+    document.onmousemove = apz.app.resetTimer;
+    document.onkeypress = apz.app.resetTimer;
+    document.click = apz.app.resetTimer;
+    document.onwheel = apz.app.resetTimer;
+};
+apz.XACBA.LandingPage.timerCallback = function(params) {
+    if (params.event === "timerExceeds") {
+        apz.app.logout();
+    }
+};
+apz.XACBA.LandingPage.fnrefreshPage = function(params) {
+    if (apz.deviceType === "WEB") {
+        apz.ns.refreshPageCallback();
+    } else {
+        apz.XACBA.LandingPage.LaunchFirstPage();
+    }
+};
+apz.app.logout = function() {
+    apz.app.Common.deepLinkFlag = false;
+    var msg = {
+        'code': 'APZ-SMS-EX-003',
+        'callBack': apz.app.refreshPage
+    };
+    apz.dispMsg(msg);
+};
+apz.app.resetTimer = function() {
+    clearTimeout(t);
+    t = setTimeout(apz.app.logout, 300000)
+};
+apz.app.refreshPage = function(params) {
+    if (apz.deviceType === "WEB") {
+        apz.ns.refreshPageCallback();
+    } else if (params.hasOwnProperty("apzIfaceName") && (params.apzIfaceName.split("__")[0] === "MenuPr" || params.apzIfaceName.split("__")[0] ===
+            "Regist" || params.apzIfaceName.split("__")[0] === "forupw" || params.apzIfaceName.split("__")[0] === "prelog")) {
+        apz.XACBA.FirstPage.LaunchFirstPage();
+    } else {
+        apz.XACBA.LandingPage.LaunchFirstPage();
+    }
+};
+$(window).scroll(function() {
+    clearTimeout(t);
+    t = setTimeout(apz.app.logout, 300000)
+});
+apz.XACBA.LandingPage.timerCallback1 = function() {
+    //TO-DO
+};
+/*$('body').bind('copy paste', function(e) {
+    e.preventDefault();
+    return false;
+});*/
+/**
+ * @Purpose    - Function to launch the MicroApp
+ * @Developer  - Tejaswini
+ **/
+apz.XACBA.LandingPage.fnSetSelectedAccObj = function(userObj) {
+    userObj.selectedAccForStemnt = {
+        "ACCOUNT_NUMBER": "",
+        "ACCOUNT_TYPE": "",
+        "CURRENCY": "",
+        "ACCOUNT_HOLDER_NAME": "",
+        "NICKNAME": "",
+        "BALANCE": "",
+        "imageName": "",
+        "branchId": ""
+    };
+    if (apz.XACBA.LandingPage.SPARAMS.dashboardObj.primaryAccountResp.isPrimaryAcAvailable) {
+        userObj.selectedAccForStemnt = {
+            "ACCOUNT_NUMBER": apz.XACBA.LandingPage.SPARAMS.dashboardObj.primaryAccountResp.primaryAccountNo,
+            "ACCOUNT_TYPE": apz.XACBA.LandingPage.SPARAMS.dashboardObj.primaryAccountResp.primaryAccountType,
+            "CURRENCY": apz.XACBA.LandingPage.SPARAMS.dashboardObj.primaryAccountResp.primaryAccountCurr,
+            "ACCOUNT_HOLDER_NAME": apz.XACBA.LandingPage.SPARAMS.dashboardObj.primaryAccountResp.primaryAccountName,
+            "NICKNAME": apz.XACBA.LandingPage.SPARAMS.dashboardObj.primaryAccountResp.primaryAccountNickname,
+            "BALANCE": apz.XACBA.LandingPage.SPARAMS.dashboardObj.primaryAccountResp.primaryAccountBalance,
+            "imageName": "current_account.svg",
+            "branchId": apz.XACBA.LandingPage.dashboardActiveAccounts[0].branchId
+        };
+    } else {
+        if (apz.XACBA.LandingPage.dashboardActiveAccounts.length > 0) {
+            userObj.selectedAccForStemnt = {
+                "ACCOUNT_NUMBER": apz.XACBA.LandingPage.dashboardActiveAccounts[0].accId,
+                "ACCOUNT_TYPE": apz.XACBA.LandingPage.dashboardActiveAccounts[0].accountType,
+                "CURRENCY": apz.XACBA.LandingPage.dashboardActiveAccounts[0].currencyCode,
+                "ACCOUNT_HOLDER_NAME": apz.XACBA.LandingPage.dashboardActiveAccounts[0].accname,
+                "NICKNAME": apz.XACBA.LandingPage.dashboardActiveAccounts[0].acNickname,
+                "BALANCE": apz.XACBA.LandingPage.dashboardActiveAccounts[0].balnce,
+                "imageName": apz.XACBA.LandingPage.dashboardActiveAccounts[0].imageName,
+                "branchId": apz.XACBA.LandingPage.dashboardActiveAccounts[0].branchId
+            };
+        }
+    }
+    userObj.selectedAccFlag = false;
+    return userObj;
+}
+apz.XACBA.LandingPage.fn_launchMicroAppObj = {};
+apz.XACBA.LandingPage.fn_launchMicroApp = function(appid, scr, div, userObj, scrStat) {
+    if (userObj.selectedAccFlag !== true) {
+        if (userObj.selectedAccForStemnt !== undefined) {
+            userObj = apz.XACBA.LandingPage.fnSetSelectedAccObj(userObj);
+        }
+    }
+    if (apz.deviceType !== "WEB") {
+        $("#XACBA__LandingPage__launchRow").removeClass("dashboard-launch");
+    }
+    var BalnceRefreshCall = apz.retrieve("sbalancerefrsh");
+    if (BalnceRefreshCall) {
+        apz.XACBA.LandingPage.fn_launchMicroAppObj = {
+            'appid': appid,
+            'scr': scr,
+            'div': div,
+            'userObj': userObj
+        }
+        apz.XACBA.LandingPage.fn_launchMicroAppObj.userObj.offlineMode = userObj.isOffline;
+        apz.XACBA.LandingPage.refreshDashBoard(true, apz.XACBA.LandingPage.fn_launchMicroAppCB);
+    } else {
+        apz.store('fromAcnsec', false);
+        userObj.prevscr = "DASHBOARD";
+        userObj.offlineMode = userObj.isOffline;
+        var launchAppReq = {
+            "appId": appid,
+            "scr": scr,
+            "div": div,
+            "userObj": userObj,
+            "animation": animation
+        };
+        $("#" + apz.appId + "__LandingPage__launchRow").empty();
+        apz.launchApp(launchAppReq);
+        //event.stopPropagation();
+    }
+    if (scrStat) {
+        if (apz.deviceGroup === "Phone") {
+            $("#page-body").removeClass("mobile-dashboard-bg");
+            $("#" + LandingPageBaseId + "gr_col_4").addClass('sno');
+        } else {
+            if (apz.deviceGroup === "IPAD") {
+                $("#page-body").removeClass("mobile-dashboard-bg");
+            }
+            $("#" + LandingPageBaseId + "gr_col_4").removeClass('sno');
+        }
+        $("#" + LandingPageBaseId + "ct_lst_3 .active").removeClass("active");
+        $("#" + LandingPageBaseId + "header1 ,#" + LandingPageBaseId + "quickLinks , #" + LandingPageBaseId + "more_row ,#" + LandingPageBaseId +
+            "myaccounts_row").addClass('sno');
+        $("#" + LandingPageBaseId + "launchRow,#" + LandingPageBaseId + "header2").removeClass('sno');
+        $("body").removeClass("pg-dashboard");
+    }
+    //event.stopPropagation();
+};
+apz.XACBA.LandingPage.fnLaunchHome = function() {
+    apz.XACBA.LandingPage.fromDashToAllAccounts = false;
+    if (apz.app.Common.deepLinkFlag) {
+        apz.store(fromMoreMenu, "");
+        apz.app.Common.deepLinkFlag = false;
+    }
+    if (apz.XACBA.LandingPage.SPARAMS.screen === undefined) {
+        apz.XACBA.LandingPage.SPARAMS.screen = ""
+    }
+    if ($('body').hasClass('modal-open')) {
+        $('body').removeClass('modal-open');
+    }
+    apz.currAppId = "XACBA";
+    if (apz.deviceGroup === "Phone") {
+        $("#" + LandingPageBaseId + "ct_lst_1_row_4").addClass("sno");
+    }
+    if (apz.XACBA.LandingPage.SPARAMS.allaccScreen !== undefined) {
+        apz.XACBA.LandingPage.SPARAMS.allaccScreen = false;
+        apz.XACBA.LandingPage.SPARAMS.Carddirect = false;
+        apz.XACBA.LandingPage.SPARAMS.CarddirectAcc = "";
+    }
+    apz.store("fromScreenAcc", "");
+    apz.XACBA.LandingPage.SPARAMS.selectedAccFlag = false;
+    apz.XACBA.LandingPage.dashboardFlag = true;
+    if (apz.retrieve(fromMoreMenu) !== "") {
+        if (apz.retrieve(fromMoreMenu) === "services") {
+            apz.XACBA.LandingPage.servBack = ""
+            apz.XACBA.LandingPage.fnServiceMenuLoad("services")
+        } else if (apz.retrieve(fromMoreMenu) === "settings") {
+            apz.XACBA.LandingPage.servBack = ""
+            apz.XACBA.LandingPage.fnServiceMenuLoad("settings")
+        } else if (apz.XACBA.LandingPage.servBack === "QpayMenu") {
+            apz.XACBA.LandingPage.servBack = ""
+            apz.XACBA.LandingPage.fnServiceMenuLoad("QpayMenu")
+        } else if (apz.retrieve(fromMoreMenu) === "More") {
+            apz.XACBA.LandingPage.servBack = ""
+            apz.XACBA.LandingPage.fnSideMenu("More")
+        }
+        if (apz.XACBA.LandingPage.servBack != "") {
+            $("#XACBA__LandingPage__el_icn_6").removeClass("active")
+            apz.XACBA.LandingPage.servBack = ""
+        }
+        apz.stopLoader();
+    } else {
+        apz.XACBA.LandingPage.refreshDashBoard(true, apz.XACBA.LandingPage.fnLaunchHomeCB);
+    }
+}
+apz.XACBA.LandingPage.fnLaunchHomeCB = function(params) {
+    // apz.XACBA.LandingPage.SPARAMS = params
+    window.scrollTo(0, 0);
+    if (apz.deviceGroup === "Phone" || apz.deviceGroup === "IPAD") {
+        $("#page-body").addClass("mobile-dashboard-bg");
+    }
+    $("#" + LandingPageBaseId + "gr_col_4,#" + LandingPageBaseId + "header1  ,#" + LandingPageBaseId + "myaccounts_row,#" + LandingPageBaseId +
+        "quickLinks").removeClass('sno');
+    $("body").addClass("pg-dashboard");
+    $("#" + LandingPageBaseId + "launchRow,#" + LandingPageBaseId + "header2, #" + LandingPageBaseId + "more_row,#" + LandingPageBaseId +
+        "gr_row_26").addClass('sno');
+    $("#" + LandingPageBaseId + "ct_lst_3 .active").removeClass("active");
+    $("#" + LandingPageBaseId + "el_icn_6").addClass('active');
+    $("#" + LandingPageBaseId + "notificationbtn").removeClass('sno');
+    $("#" + LandingPageBaseId + "logoutBtn").removeClass('sno');
+    //apz.XACBA.LandingPage.fn_loadAccountsList();
+    // apz.XACBA.LandingPage.fn_loadAccountsList();
+}
+apz.XACBA.LandingPage.fn_launchMicroAppCB = function(status, params) {
+    if (status) {
+        apz.store('fromAcnsec', false);
+        apz.XACBA.LandingPage.fn_launchMicroAppObj.userObj = params;
+        apz.XACBA.LandingPage.fn_launchMicroAppObj.userObj.prevscr = "DASHBOARD";
+        var launchAppReq = {
+            "appId": apz.XACBA.LandingPage.fn_launchMicroAppObj.appid,
+            "scr": apz.XACBA.LandingPage.fn_launchMicroAppObj.scr,
+            "div": apz.XACBA.LandingPage.fn_launchMicroAppObj.div,
+            "userObj": apz.XACBA.LandingPage.fn_launchMicroAppObj.userObj,
+            "animation": animation
+        };
+        $("#" + apz.appId + "__LandingPage__launchRow").empty();
+        apz.launchApp(launchAppReq);
+    }
+}
+/**
+ * @Purpose    - Function to logg out from the application
+ * @Developer  - Tejaswini
+ **/
+apz.XACBA.LandingPage.fnLogout = function() {
+    if (apz.deviceType != "WEB") {
+        apz.XACBA.LandingPage.stoppullback();
+    }
+    apz.app.Common.deepLinkFlag = false;
+    var lparams = {
+        "targetId": "XACBA__LandingPage__confirmationModal"
+    };
+    apz.toggleModal(lparams);
+};
+apz.XACBA.LandingPage.fnclearLogout = function(params) {
+    apz.startLoader();
+    if (params === undefined || params === "true") {
+        var params = {
+            "userId": apz.userId,
+            "appId": apz.appId,
+            "callBack": apz.XACBA.LandingPage.fnLogoutCb
+        };
+        if (apz.deviceType==='WEB'){
+        apz.app.Common.fnstopShortcut();
+        }
+        apz.server.logout(params);
+    }
+};
+/*apz.XACBA.LandingPage.fnLogoutconfirmCB = function(presp) {
+    var params = {
+        "userId": apz.userId,
+        "appId": apz.appId,
+        "callBack": apz.XACBA.LandingPage.fnLogoutCb
+    };
+  
+  //  apz.startLoader();
+   // setTimeout(function() {
+        apz.server.logout(params);
+   // }, 20);
+};*/
+apz.XACBA.LandingPage.fnLogoutCb = function(params) {
+    if (params.resFull.appzillonHeader.status) {
+        apz.resetApplication();
+        if (apz.deviceType === "WEB") {
+            apz.ns.refreshPageCallback();
+        } else {
+            var lparams = {
+                "targetId": "XACBA__LandingPage__confirmationModal"
+            };
+            apz.toggleModal(lparams);
+            apz.XACBA.LandingPage.LaunchFirstPage();
+            // apz.stopLoader();
+        }
+    } else {
+        apz.app.refreshPage()
+    }
+    apz.XACBA.LandingPage.stopNetworkListener();
+};
+apz.XACBA.LandingPage.stopNetworkListener = function() {
+    var jsonobj = {};
+    jsonobj.id = "NW_LISTENER";
+    jsonobj.callBack = apz.XACBA.LandingPage.stopNetworkListenerCallback;
+    apz.ns.stopNetworkListener(jsonobj);
+}
+apz.XACBA.LandingPage.stopNetworkListenerCallback = function(params) {
+    debugger;
+}
+apz.XACBA.LandingPage.fncancelLogout = function() {
+    var lparams = {
+        "targetId": "XACBA__LandingPage__confirmationModal"
+    };
+    apz.toggleModal(lparams);
+}
+apz.XACBA.LandingPage.fnLogoutConfirm = function(params) {
+    if (params.choice) {
+        var json = {};
+        json.id = "CUSTOMER_DATA";
+        json.callBack = apz.XACBA.LandingPage.userDetailsCB;
+        json.key = "tourdata";
+        if (apz.deviceType !== "WEB") {
+            apz.ns.getPref(json);
+        }
+        apz.XACBA.LandingPage.LaunchFirstPage();
+    }
+};
+/**
+ * @Purpose    - Function to launch the firstPage
+ * @Developer  - Tejaswini
+ **/
+apz.XACBA.LandingPage.LaunchFirstPage = function() {
+    var launchAppReq = {
+        "appId": apz.appId,
+        "scr": "FirstPage",
+        "userObj": {
+            "logout": true,
+            "animation": ANIMATION_BACKWARD
+        }
+    };
+    apz.launchScreen(launchAppReq);
+}
+/**
+ * @Purpose    - Function to Navigate the menu options on click
+ * @Developer  - Tejaswini
+ **/
+apz.XACBA.LandingPage.userDetailsCB = function(params) {
+    USERID = JSON.parse(params.value).userId;
+    PWD = JSON.parse(params.value).pwd;
+}
+/**
+ * @Purpose    - Function to Navigate the menu options on click
+ * @Developer  - Tejaswini
+ **/
+apz.XACBA.LandingPage.fn_ClickMainMenu = function(pthis) {
+    if (MenuClose === "") {
+        apz.XACBA.LandingPage.fnHideErrMsg();
+        apz.XACBA.LandingPage.SPARAMS.debFl = false;
+        apz.XACBA.LandingPage.SPARAMS.credFl = false;
+        rowno = parseInt(pthis.id.split("_")[6]);
+        apz.store('fromAcnsec', false);
+        var screen = "";
+        if (apz.XACBA.LandingPage.USEROBJ.transAccType) {
+            apz.XACBA.LandingPage.USEROBJ.transAccType = "";
+        }
+        if (apz.XACBA.LandingPage.USEROBJ.lFromScreen) {
+            apz.XACBA.LandingPage.USEROBJ.lFromScreen = "";
+        }
+        if (apz.XACBA.LandingPage.USEROBJ.fromScreen) {
+            apz.XACBA.LandingPage.USEROBJ.fromScreen = "";
+        }
+        if (apz.deviceType !== "WEB") {
+            for (var i = 0; i < apz.data.scrdata.XACBA__menu_Req.serviceMenu.length; i++) {
+                if ($("#XACBA__LandingPage__mainList_row_" + i).hasClass("active")) {
+                    $("#" + LandingPageBaseId + "mainList_row_" + i).removeClass("active")
+                }
+            }
+            $("#" + LandingPageBaseId + "mainList_row_" + rowno).addClass("active")
+        }
+        if (rowno === 0) {
+            apz.XACBA.LandingPage.fnmenuClose();
+            if (apz.deviceGroup === "Phone") {
+                // apz.toggleSidebar(pthis);
+            }
+            if (apz.language === "mn") {
+                screen = apz.lits['XACBA']['XAC_SCR_ACCOUNTS']
+                apz.XACBA.LandingPage.fnMenuNav(screen, apz.XACBA.LandingPage.USEROBJ);
+            } else {
+                screen = apz.lits['XACBA']['XAC_SCR_ACCOUNTS']
+                apz.XACBA.LandingPage.fnMenuNav(screen, apz.XACBA.LandingPage.USEROBJ);
+            }
+        } else if (rowno === 1) {
+            if ($("#XACBA__LandingPage__mainList_row_" + rowno).hasClass("submenu-open")) {
+                $("#" + LandingPageBaseId + "transferMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "mainList_row_" + rowno).removeClass("submenu-open");
+            } else {
+                $("#" + LandingPageBaseId + "mainList_row_" + rowno).addClass("submenu-open");
+                $("#" + pthis.id).append("<div id='transferMenu'></div>");
+                var tmenu = $("#" + LandingPageBaseId + "transferMenu").removeClass('sno');
+                /*document.getElementById*/
+                $('#transferMenu').append(tmenu[0]);
+                $("#" + LandingPageBaseId + "spendAnalyserMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "serviceRequestMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "settingsMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "calculatorMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "qpayMenu").addClass('sno');
+            }
+        } else if (rowno === 5) {
+            apz.XACBA.LandingPage.fnmenuClose();
+            if (apz.deviceGroup === "Phone") {
+                //  apz.toggleSidebar(pthis);
+            }
+            screen = apz.lits['XACBA']['RB_ACCOUNTS'];
+            apz.XACBA.LandingPage.fnMenuNav(screen, apz.XACBA.LandingPage.USEROBJ);
+        } else if (rowno === 4) {
+            if ($("#XACBA__LandingPage__mainList_row_" + rowno).hasClass("submenu-open")) {
+                $("#" + LandingPageBaseId + "serviceRequestMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "mainList_row_" + rowno).removeClass("submenu-open");
+            } else {
+                $("#" + LandingPageBaseId + "mainList_row_" + rowno).addClass("submenu-open");
+                $("#" + pthis.id).append("<div id='serviceRequestMenu'></div>");
+                var serreqmenu = $("#" + LandingPageBaseId + "serviceRequestMenu").removeClass('sno');
+                $("#" + LandingPageBaseId + "transferMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "spendAnalyserMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "settingsMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "calculatorMenu").addClass('sno');
+                /*document.getElementById*/
+                $('#serviceRequestMenu').append(serreqmenu[0]);
+                $("#" + LandingPageBaseId + "qpayMenu").addClass('sno');
+            }
+        } else if (rowno === 6) {
+            apz.XACBA.LandingPage.fnmenuClose();
+            if (apz.deviceGroup === "Phone") {
+                apz.toggleSidebar(pthis);
+            }
+            screen = apz.lits['XACBA']["RB_SPENDANALYSE"];
+            apz.XACBA.LandingPage.fnMenuNav(screen, apz.XACBA.LandingPage.USEROBJ);
+        } else if (rowno === 7) {
+            if ($("#XACBA__LandingPage__mainList_row_" + rowno).hasClass("submenu-open")) {
+                $("#" + LandingPageBaseId + "settingsMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "mainList_row_" + rowno).removeClass("submenu-open");
+            } else {
+                $("#" + LandingPageBaseId + "mainList_row_" + rowno).addClass("submenu-open");
+                $("#" + pthis.id).append("<div id='settingsMenu'></div>");
+                var setmenu = $("#" + LandingPageBaseId + "settingsMenu").removeClass('sno');
+                /*document.getElementById*/
+                $('#settingsMenu').append(setmenu[0]);
+                $("#" + LandingPageBaseId + "transferMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "spendAnalyserMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "serviceRequestMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "calculatorMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "qpayMenu").addClass('sno');
+                /* if (apz.XACBA.LandingPage.SPARAMS.dashboardObj.isTxnPassCodeAvlable === true) {
+                    $("#" + LandingPageBaseId + "settingsMenu_row_9").removeClass("sno");
+                } else {
+                    $("#" + LandingPageBaseId + "settingsMenu_row_9").removeClass("sno");
+                }*/
+            }
+        } else if (rowno === 8) {
+            if ($("#XACBA__LandingPage__mainList_row_" + rowno).hasClass("submenu-open")) {
+                $("#" + LandingPageBaseId + "calculatorMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "mainList_row_" + rowno).removeClass("submenu-open");
+            } else {
+                $("#" + LandingPageBaseId + "mainList_row_" + rowno).addClass("submenu-open");
+                $("#" + pthis.id).append("<div id='calculatorMenu'></div>");
+                var calmenu = $("#" + LandingPageBaseId + "calculatorMenu").removeClass('sno');
+                /*document.getElementById*/
+                $('#calculatorMenu').append(calmenu[0]);
+                $("#" + LandingPageBaseId + "transferMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "spendAnalyserMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "serviceRequestMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "settingsMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "qpayMenu").addClass('sno');
+            }
+        } else if (rowno === 10) {
+            if ($("#XACBA__LandingPage__mainList_row_" + rowno).hasClass("submenu-open")) {
+                $("#" + LandingPageBaseId + "qpayMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "mainList_row_" + rowno).removeClass("submenu-open");
+            } else {
+                $("#" + LandingPageBaseId + "mainList_row_" + rowno).addClass("submenu-open");
+                $("#" + pthis.id).append("<div id='qpayMenu'></div>");
+                var qmenu = $("#" + LandingPageBaseId + "qpayMenu").removeClass('sno');
+                /*document.getElementById*/
+                $('#qpayMenu').append(qmenu[0]);
+                $("#" + LandingPageBaseId + "calculatorMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "transferMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "spendAnalyserMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "serviceRequestMenu").addClass('sno');
+                $("#" + LandingPageBaseId + "settingsMenu").addClass('sno');
+            }
+        } else if (rowno === 9) {
+            if (apz.deviceGroup === "Phone") {
+                apz.toggleSidebar(pthis);
+            }
+            apz.XACBA.LandingPage.fnmenuClose();
+            screen = apz.lits['XACBA']['RB_CONTACTUS'];
+            //apz.XACBA.LandingPage.SPARAMS.LoyalityDebacrd = "";
+            apz.XACBA.LandingPage.fnMenuNav(screen, apz.XACBA.LandingPage.USEROBJ);
+        } else if (rowno === 3) {
+            apz.XACBA.LandingPage.SPARAMS.fromscr = "";
+            apz.XACBA.LandingPage.SPARAMS.Carddirect = false;
+            if (apz.deviceGroup === "Phone") {
+                apz.toggleSidebar(pthis);
+            }
+            apz.XACBA.LandingPage.fnmenuClose();
+            if (apz.language === "mn") {
+                screen = apz.lits['XACBA']['XAC_CARDS'];
+                apz.XACBA.LandingPage.fnMenuNav(screen, apz.XACBA.LandingPage.USEROBJ);
+            } else {
+                screen = apz.lits['XACBA']['XAC_CARDS'];
+                apz.XACBA.LandingPage.fnMenuNav(screen, apz.XACBA.LandingPage.USEROBJ);
+            }
+            if (apz.language === "mn") {} else {
+                if (screen !== apz.lits['XACBA']['XAC_CARDS']) {
+                    screen = "loyalty";
+                    apz.XACBA.LandingPage.fnMenuNav("loyalty", apz.XACBA.LandingPage.USEROBJ);
+                }
+            }
+        } else if (rowno === 2) {
+            if (apz.deviceGroup === "Phone") {
+                apz.toggleSidebar(pthis);
+            }
+            apz.XACBA.LandingPage.fnmenuClose();
+            screen = apz.lits['XACBA']["RB_MYBILL"];
+            apz.XACBA.LandingPage.fnMenuNav(screen, apz.XACBA.LandingPage.USEROBJ);
+        } else {
+            apz.XACBA.LandingPage.fnClickMenu(this);
+        }
+        for (i = 0; i <= 8; i++) {
+            if (i === rowno) {
+                if ($("#XACBA__LandingPage__mainList_row_" + rowno).hasClass("submenu-open")) {
+                    $("#" + LandingPageBaseId + "mainList_row_" + rowno).addClass("submenu-open");
+                }
+            } else {
+                $("#" + LandingPageBaseId + "mainList_row_" + i).removeClass("submenu-open");
+            }
+        }
+    } else {
+        MenuClose = "";
+    }
+}
+/**
+ * @Purpose    - Function to upadte the  activate accounts
+ * @Developer  - Ashwini
+ **/
+apz.XACBA.LandingPage.fnActiveAccounnt = function(params) {
+    params.Activedaccounts = {};
+    for (var i = 0; i < CURRALLOWED.length; i++) {
+        if (params.dashboardObj.accountSummaryResp.accountDtlsResp.hasOwnProperty(CURRALLOWED[i])) {
+            params.Activedaccounts[CURRALLOWED[i]] = {};
+            for (var j = 0; j < ACCTYPE.length; j++) {
+                if (params.dashboardObj.accountSummaryResp.accountDtlsResp[CURRALLOWED[i]].hasOwnProperty(ACCTYPE[j])) {
+                    params.Activedaccounts[CURRALLOWED[i]][ACCTYPE[j]] = [];
+                    for (var x = 0; x < params.dashboardObj.accountSummaryResp.accountDtlsResp[CURRALLOWED[i]][ACCTYPE[j]].length; x++) {
+                        if (params.dashboardObj.accountSummaryResp.accountDtlsResp[CURRALLOWED[i]][ACCTYPE[j]][x].isEnabledForBanking === "Y" ||
+                            params.dashboardObj.accountSummaryResp.accountDtlsResp[CURRALLOWED[i]][ACCTYPE[j]][x].isEnabledForBanking === "on") {
+                            params.Activedaccounts[CURRALLOWED[i]][ACCTYPE[j]].push(params.dashboardObj.accountSummaryResp.accountDtlsResp[
+                                CURRALLOWED[i]][ACCTYPE[j]][x]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    params.Activeaccounts = [];
+    for (i = 0; i < params.dashboardObj.primaryAccountResp.ibankingEnabledAcs.length; i++) {
+        if (params.dashboardObj.primaryAccountResp.ibankingEnabledAcs[i].accType === "CASA" || params.dashboardObj.primaryAccountResp
+            .ibankingEnabledAcs[i].accType === "OVERDRAFT") {
+            if (params.dashboardObj.primaryAccountResp.ibankingEnabledAcs[i].isEnabledForBanking === "Y") {
+                params.Activeaccounts.push(params.dashboardObj.primaryAccountResp.ibankingEnabledAcs[i]);
+            }
+        }
+    }
+}
+/**
+ * @Purpose    - Function to validate the screen access for the role
+ * @Developer  - Sanjay
+ **/
+apz.XACBA.LandingPage.validateScrAccessForRole = function(AppId, scrName, params) {
+    var status = true;
+    /*try {*/
+    if (apz.XACBA.LandingPage.customerRole) {
+        //if (params.dashboardObj.customerRole === 'view') {
+        var allwedScrList = params.dashboardObj.roleAlwdScreensList;
+        var lscreenName = AppId + '__' + scrName;
+        status = !($.inArray(lscreenName, apz.XACBA.LandingPage.roleAlwdScreensList) === -1);
+        //}
+    }
+    /*} catch {}*/
+    return status;
+}
+/**
+ * @Purpose    - Function to Navigate the menu options on click whwn quicaccess menu proper
+ * @Developer  - ashwini
+ **/
+apz.XACBA.LandingPage.fnMenuNav = function(screen, params, scrstatus) {
+    if (scrstatus == true) {
+        $("#" + LandingPageBaseId + "header1").addClass("sno");
+        $("body").removeClass("pg-dashboard");
+        $("#" + LandingPageBaseId + "header2").removeClass("sno");
+        $("#" + LandingPageBaseId + "notificationbtn").addClass('sno');
+        $("#" + LandingPageBaseId + "notificationbtnIB").addClass('sno');
+        $("#" + LandingPageBaseId + "logoutBtn").addClass('sno');
+        if (apz.deviceGroup === "Phone" || apz.deviceType !== "WEB") {
+            $("#" + LandingPageBaseId + "logoutBtnIB").addClass('sno');
+            $("#" + LandingPageBaseId + "HomeButton").removeClass('sno');
+        } else {
+            $("#" + LandingPageBaseId + "logoutBtnIB").removeClass('sno');
+            $("#" + LandingPageBaseId + "HomeButton").addClass('sno');
+        }
+    }
+    var QuickAceesMenuFlag = false;
+    var widgetFlag = false;
+    if (screen === "accounts") {
+        $("#XACBA__LandingPage__accountsBreadcrumb").removeClass("sno");
+        $("#XACBA__LandingPage__sc_col_7,#XACBA__LandingPage__sc_col_17").addClass("sno");
+        $("#XACBA__LandingPage__accountsBreadcrumb li:nth-child(3),#XACBA__LandingPage__accountsBreadcrumb li:nth-child(4)").addClass("sno");
+        $("#XACBA__LandingPage__accountsBreadcrumb li").removeClass("active");
+        $("#XACBA__LandingPage__accountsBreadcrumb li:nth-child(2)").addClass("active");
+        if (apz.XACBA.LandingPage.SPARAMS.Tduserparams !== undefined) {
+            apz.XACBA.LandingPage.SPARAMS.Tduserparams.rowNo = "";
+        }
+        screen = apz.lits['XACBA']['XAC_SCR_ACCOUNTS'];
+        params = apz.XACBA.LandingPage.USEROBJ;
+    }
+    $("#" + LandingPageBaseId + "gr_row_26").addClass('sno');
+    apz.XACBA.LandingPage.fnMenuNav1(screen, params, scrstatus)
+    /* if (params.screen === "quick access menu" || params.screen === "шуурхай цэс") {
+        if (params.QACOUNT >= 2 && params.WCOUNT >= 1) {
+            apz.XACBA.LandingPage.fnMenuNav1(screen, params)
+        } else {
+            var lMsg = {
+                "code": "ERR_PLEASESELECTMENU"
+            };
+            apz.dispMsg(lMsg);
+        }
+    } else {
+     }*/
+}
+/**
+ * @Purpose    - Function to Navigate the menu options on click
+ * @Developer  - Tejaswini
+ **/
+apz.XACBA.LandingPage.fnMenuNav1 = function(screen, params, scrStatus) {
+    /*  if (apz.XACBA.LandingPage.SPARAMS.dashboardObj.isTxnPassCodeAvlable === true) {
+        $("#" + LandingPageBaseId + "settingsMenu_row_7").addClass("sno");
+    } else {
+        $("#" + LandingPageBaseId + "settingsMenu_row_7").removeClass("sno");
+    }*/
+    $("#" + LandingPageBaseId + "settingsMenu_row_1").addClass("sno");
+    $("#" + LandingPageBaseId + "calculatorMenu_row_2").addClass("sno");
+    apz.XACBA.LandingPage.SPARAMS.LoanFlag = "false";
+    apz.XACBA.LandingPage.SPARAMS.fromLoanOpen = "false";
+    apz.XACBA.LandingPage.SPARAMS.backfromLoan = "";
+    apz.XACBA.LandingPage.SPARAMS.saveTranFlag = false;
+    apz.XACBA.LandingPage.SPARAMS.fromScreen = "";
+    apz.XACBA.LandingPage.SPARAMS.transAccType = "";
+    apz.XACBA.LandingPage.SPARAMS.lFromScreen = "";
+    apz.XACBA.LandingPage.SPARAMS.BeneType = "";
+    if (apz.deviceGroup === "Phone") {
+        if (screen === apz.lits['XACBA']['RB_SaveTransaction']) {
+            apz.toggleSidebar(params);
+        }
+    }
+    if (screen === "гүйлгээний баримт" || screen === "receipt") {
+        screen = apz.lits['XACBA']['XAC_RECIEPT']
+    }
+    if (screen === "manage accounts" || screen === apz.lits['XACBA']['XAC_SCR_ACCOUNTS'] || screen === "дансны удирдлага" || screen === apz.lits[
+            'XACBA']['RB_ACCOUNTS']) {
+        params.emailId = params.dashboardObj.emailId;
+        apz.XACBA.LandingPage.fnActiveAccounnt(params);
+        /* params.Activeaccounts = [];
+        for (i = 0; i < params.dashboardObj.primaryAccountResp.ibankingEnabledAcs.length; i++) {
+            if (params.dashboardObj.primaryAccountResp.ibankingEnabledAcs[i].accType === "CASA" || params.dashboardObj.primaryAccountResp.ibankingEnabledAcs[
+                i].accType === "OVERDRAFT") {
+                if (params.dashboardObj.primaryAccountResp.ibankingEnabledAcs[i].isEnabledForBanking === "Y") {
+                    params.Activeaccounts.push(params.dashboardObj.primaryAccountResp.ibankingEnabledAcs[i]);
+                }
+            }
+        }
+        if (apz.currAppId !== "allacc" && apz.currAppId !== "dashbd" && apz.currAppId !== "actype") {
+            if (params.hasOwnProperty("Activedaccounts")) {
+                params.Activedaccounts;
+            } else {
+                apz.XACBA.LandingPage.fnActiveAccounnt(params);
+            }
+        } else {
+            apz.XACBA.LandingPage.fnActiveAccounnt(params);
+        }
+        if (screen === apz.lits['XACBA']['RB_ACCOUNTS']) {
+            apz.XACBA.LandingPage.fnActiveAccounnt(params);
+        }*/
+    } else {
+        if (screen === apz.lits['XACBA']['RB_DOMESTICTRANS'] /*"domestic transfer"*/ || screen === apz.lits['XACBA']['RB_SaveTransaction'] ||
+            screen === "beneficiary" || screen === apz.lits['XACBA']['XAC_RECIEPT'] || screen === apz.lits['XACBA']['XAC_STANDING_INST'] ||
+            screen === "Захиалгат гүйлгээ" || screen == "account to account" || screen === apz.lits['XACBA']['XAC_CARDS'] || screen === "QPay" ||
+            screen === "Qpay Settings" || screen === "Payment History" || screen === "top up" || screen === "гүйлгээ" || screen ===
+            "дансны дэвтэр" || screen === "гүйлгээний баримт" || screen === "захиалгат гүйлгээ" || screen === "дотоод шилжүүлэг" || screen ===
+            "multi transfer" || screen === "deposit backed loan" || screen === "batch transfer" || screen === "exchange deals" || screen ===
+            "peer to peer transfer" || screen === apz.lits['XACBA']['RB_INTERNATIONALTRANSFER'] || screen === "contact us" || screen ===
+            "locations" || screen === apz.lits['XACBA']["RB_SPENDANALYSE"] || screen === apz.lits['XACBA']["RB_ALERTNOTIFICATIONS"] || screen ===
+            apz.lits['XACBA']['RB_REFLETTER'] || screen === 'loyalty' || screen === "reference letter" || screen === "дансууд" || screen === apz
+            .lits['XACBA']['RB_GEN_CAM'] || screen === apz.lits['XACBA']['RB_CALCULATOR'] || screen === apz.lits['XACBA']['RB_ACCOUNTS'] ||
+            screen === apz.lits['XACBA']['RB_BUDGETGOALS'] || screen == apz.lits['XACBA']['XAC_DEP'] || screen === apz.lits.XACBA["RB_MYBILL"]) {
+            if (params.dashboardObj.emailId !== undefined) {
+                params.emailId = params.dashboardObj.emailId;
+            }
+            params.Activeaccounts = [];
+            for (var i = 0; i < params.dashboardObj.primaryAccountResp.ibankingEnabledAcs.length; i++) {
+                if (params.dashboardObj.primaryAccountResp.ibankingEnabledAcs[i].accType === "CASA" || params.dashboardObj.primaryAccountResp
+                    .ibankingEnabledAcs[i].accType === "OVERDRAFT") {
+                    if (params.dashboardObj.primaryAccountResp.ibankingEnabledAcs[i].isEnabledForBanking === "Y") {
+                        params.Activeaccounts.push(params.dashboardObj.primaryAccountResp.ibankingEnabledAcs[i]);
+                    }
+                }
+            }
+        }
+    }
+    if (screen === apz.lits['XACBA']['RB_CONTACTUS']) {
+        $("#XACBA__LandingPage__chatWindowMain_Row").removeClass("sno");
+    } else {
+        $("#XACBA__LandingPage__chatWindowMain_Row").addClass("sno");
+    }
+    if (screen === "Change Passwords") {
+        screen = apz.lits['XACBA']['XAC_CHANGE_PWD']
+    }
+    params.screen = screen;
+    params.fromMenu = "";
+    var scrName = "";
+    var AppId = "";
+    var menuItemId = "";
+    switch (screen) {
+        case apz.lits['XACBA']['XAC_DASHBOARD']:
+            scrName = "DashBoard"
+            AppId = "dashbd";
+            menuItemId = menuOptions.DashBoard;
+            break;
+        case apz.lits['XACBA']['RB_DOMESTICTRANS']:
+            scrName = "TransferMenu"
+            AppId = "trnnav";
+            menuItemId = menuOptions.TransferMenu;
+            break;
+        case apz.lits['XACBA']['RB_QRGENERATION']:
+            scrName = "QRGeneration"
+            AppId = "QRCode";
+            menuItemId = menuOptions.QRGeneration;
+            break;
+        case apz.lits['XACBA']['XAC_STANDING_INST']:
+            //$("#" + LandingPageBaseId + "transferMenu").addClass('sno');
+            scrName = "ModifySI"
+            AppId = "stinst";
+            menuItemId = menuOptions.ModifySI;
+            break;
+        case apz.lits['XACBA']['XAC_CHANGE_PWD']:
+            //$("#" + LandingPageBaseId + "settingsMenu").addClass('sno');
+            scrName = "ChangePassword"
+            AppId = "CHGPAS";
+            menuItemId = menuOptions.ChangePassword;
+            break;
+        case apz.lits['XACBA']['XAC_TRANSFER']:
+            scrName = "transfer"
+            AppId = "transf";
+            menuItemId = menuOptions.transfer;
+            break;
+        case apz.lits['XACBA']['XAC_MANAGE_BENF']:
+            //$("#" + LandingPageBaseId + "transferMenu").addClass('sno');
+            scrName = "beneficiary"
+            AppId = "benefi";
+            menuItemId = menuOptions.beneficiary;
+            break;
+        case apz.lits['XACBA']['RB_SaveTransaction']:
+            //$("#" + LandingPageBaseId + "transferMenu").addClass('sno');
+            scrName = "viewall"
+            AppId = "transf";
+            menuItemId = menuOptions.transfer;
+            break;
+        case apz.lits['XACBA']['XAC_SCR_ACCSTMNT']:
+            scrName = "AccountStatement"
+            AppId = "Accoun";
+            menuItemId = menuOptions.AccountStatement;
+            break;
+        case apz.lits['XACBA']['XAC_SCR_ACCOUNTS']:
+            scrName = "AllAccounts"
+            AppId = "allacc";
+            menuItemId = menuOptions.AllAccounts;
+            break;
+            /*case apz.lits['XACBA']['XAC_SCR_ACCOUNTS']:
+            scrName = "AllAccounts"
+            AppId = "allacc";
+            menuItemId = menuOptions.AllAccounts;
+            break;*/
+        case apz.lits['XACBA']['XAC_CARDS']:
+            scrName = "DebitCreditList"
+            AppId = "Cards";
+            menuItemId = menuOptions.Cards;
+            apz.XACBA.LandingPage.SPARAMS.fromscr = "";
+            break;
+        case apz.lits['XACBA']['XAC_TopUP']:
+            scrName = "TdTopup"
+            AppId = "TdTopu";
+            menuItemId = menuOptions.tdtopup;
+            break;
+        case apz.lits['XACBA']['XACMNG_ACCNTS']:
+            //$("#" + LandingPageBaseId + "settingsMenu").addClass('sno');
+            scrName = "AllAccounts"
+            AppId = "allacc";
+            menuItemId = menuOptions.AllAccounts;
+            break;
+        case apz.lits['XACBA']['XAC_RECIEPT']:
+            params.recieptScreen = "";
+            scrName = "RECIEPT"
+            AppId = "RECIEP";
+            menuItemId = menuOptions.RECIEPT;
+            break;
+        case apz.lits['XACBA']['RB_ACTOACC']:
+            scrName = "transfer";
+            AppId = "transf";
+            params.fromMenu = screen;
+            menuItemId = menuOptions.AccountsDisp;
+            break;
+        case apz.lits['XACBA']['XAC_TXNCODE']:
+            scrName = "TxnCode"
+            AppId = "TxnCde";
+            menuItemId = menuOptions.TransactionCode;
+            params.action = "";
+            params.action = "createTxnCode";
+            break;
+        case apz.lits['XACBA']['XAC_REDISBURSE']:
+            scrName = "ReDisbursement"
+            AppId = "reDisb";
+            menuItemId = menuOptions.Redisbursement;
+            break;
+        case apz.lits['XACBA']['XAC_DBL_EXT']:
+            scrName = "dblExtendDueDte"
+            AppId = "DBLExt";
+            menuItemId = menuOptions.DBLExtension;
+            break;
+        case apz.lits['XACBA']['XAC_TOP_UP_LOAN']:
+            scrName = "topuploan"
+            AppId = "loanTo";
+            menuItemId = menuOptions.topuploan;
+            break;
+        case apz.lits['XACBA']['RB_MULTITRANSFER']:
+            scrName = "transfer";
+            AppId = "transf";
+            params.fromMenu = 'multi transfer';
+            menuItemId = menuOptions.AccountsDisp;
+            break;
+        case apz.lits['XACBA']['RB_DEP_BK_LOAN']:
+            scrName = "SelectAccount"
+            AppId = "DBLapp";
+            menuItemId = menuOptions.DepositBackedLoan;
+            break;
+        case apz.lits['XACBA']['XAC_LOAN_DBL_EXT']:
+            scrName = "loanExtendDueDate"
+            AppId = "LOANEx";
+            menuItemId = menuOptions.DBLExtension;
+            break;
+        case apz.lits['XACBA']['XAC_LOAN_REDISBURSE']:
+            scrName = "loanRedisbursement"
+            AppId = "loanRe";
+            menuItemId = menuOptions.Redisbursement;
+            break;
+        case apz.lits['XACBA']['RB_BATCHTRANSFER']:
+            scrName = "transfer";
+            AppId = "transf";
+            params.fromMenu = 'batch transfer';
+            menuItemId = menuOptions.AccountsDisp;
+            break;
+        case apz.lits['XACBA']['RB_PEERTOPEER']:
+            scrName = "ptoptransfer";
+            AppId = "peerto";
+            params.fromMenu = 'peer to peer';
+            menuItemId = menuOptions.peertopeer;
+            break;
+        case apz.lits['XACBA']['RB_ExchangeDeals']:
+            scrName = "selectdeal";
+            AppId = "Exchan";
+            params.fromMenu = screen;
+            menuItemId = menuOptions.exchangedeal;
+            break;
+        case apz.lits['XACBA']['RB_INTERNATIONALTRANSFER']:
+            scrName = "transfer";
+            AppId = "transf";
+            params.fromMenu = 'international';
+            MenuClose = "true";
+            menuItemId = menuOptions.AccountsDisp;
+            apz.XACBA.LandingPage.InternationLaunchParams = params;
+            apz.XACBA.LandingPage.InternationLaunchParams.scrStatus = scrStatus;
+            break;
+        case apz.lits['XACBA']['RB_MNGLIMIT']:
+            scrName = "MangeLimit";
+            AppId = "Manage";
+            menuItemId = menuOptions.MangeLimit;
+            break;
+        case apz.lits['XACBA']['RB_QUICKACCESS']:
+            scrName = "quickAccess";
+            AppId = "Quick";
+            menuItemId = menuOptions.quickAccess;
+            break;
+        case apz.lits['XACBA']['RB_TRACKING']:
+            scrName = "tracking"
+            AppId = "tracki";
+            menuItemId = menuOptions.TRACKING;
+            break;
+        case apz.lits['XACBA']['RB_PROFILE']:
+            scrName = "profile"
+            AppId = "Profil";
+            menuItemId = menuOptions.profile;
+            break;
+        case apz.lits['XACBA']['RB_CONTACTUS']:
+            scrName = "ContactScreen"
+            AppId = "Contac";
+            menuItemId = menuOptions.contactus;
+            break;
+        case apz.lits['XACBA']['RB_ACCOUNTS']:
+            scrName = "AccountType"
+            AppId = "actype";
+            params.fromMenu = "";
+            menuItemId = menuOptions.accounts;
+            break;
+        case apz.lits['XACBA']['RB_QPAY']:
+            scrName = "Paybill_settings"
+            AppId = "Paybil";
+            params.fromMenu = "";
+            menuItemId = menuOptions.Payment_settings;
+            break;
+        case apz.lits['XACBA']['RB_QPAYHIST']:
+            scrName = "PaymentHistory"
+            AppId = "Paybil";
+            params.fromMenu = "";
+            menuItemId = menuOptions.PaymentHistory;
+            break;
+        case apz.lits['XACBA']['RB_QSETT']:
+            scrName = "Settings"
+            AppId = "Paybil";
+            params.fromMenu = "";
+            menuItemId = menuOptions.Settings;
+            break;
+        case apz.lits['XACBA']['RB_SPENDANALYSE']:
+            scrName = "spendanalyser"
+            AppId = "SpendA";
+            menuItemId = menuOptions.spendanalyser;
+            break;
+        case apz.lits['XACBA']['RB_BUDGETGOALS']:
+            scrName = "spendanalyser"
+            AppId = "SpendA";
+            menuItemId = menuOptions.spendanalyser;
+            break;
+        case apz.lits['XACBA']['RB_LOCATIONS']:
+            scrName = "LocationDetector"
+            AppId = "locatr";
+            params.fromMenu = "";
+            menuItemId = menuOptions.locations;
+            break;
+        case apz.lits['XACBA']['RB_REFLETTER']:
+            params.accscr = "";
+            scrName = "ReferenceLetter";
+            AppId = "Refere";
+            menuItemId = menuOptions.referenceletter;
+            break;
+        case apz.lits['XACBA']['RB_CALCULATOR']:
+            scrName = "calculator"
+            AppId = "calcul";
+            menuItemId = menuOptions.calculator;
+            break;
+        case apz.lits['XACBA']['RB_ACCOUNTS']:
+            scrName = "AccountType"
+            AppId = "actype";
+            params.fromMenu = "";
+            menuItemId = menuOptions.accounts;
+            break;
+        case apz.lits['XACBA']['RB_GEN_CAM']:
+            screenfrom = false;
+            scrName = "generateCAM"
+            AppId = "CAMMOD";
+            menuItemId = menuOptions.generateCAM;
+            break;
+        case apz.lits['XACBA']['XAC_DEP']:
+            scrName = "OpenNewDeposit"
+            AppId = "newacc";
+            menuItemId = menuOptions.accounts;
+            break;
+        case apz.lits['XACBA']['RB_MYBILL']:
+            screenfrom = false;
+            scrName = "BillPaymentLanding"
+            AppId = "bilpay";
+            menuItemId = menuOptions.billpayment;
+            break;
+        case apz.lits['XACBA']['RB_ALERTNOTIFICATIONS']:
+            apz.XACBA.LandingPage.fnActiveAccounnt(params);
+            screenfrom = false;
+            scrName = "ManageAlert"
+            AppId = "AlertN";
+            menuItemId = menuOptions.billpayment;
+            break;
+        case apz.lits['XACBA']['RB_LOAYALTY']:
+            scrName = "Loyalty"
+            AppId = "Loyalt";
+            menuItemId = menuOptions.loyalty;
+            break;
+        case "Biometric Authentication":
+            scrName = "BiometricAuthentication";
+            AppId = "XACBA";
+            menuItemId = "88";
+            break;
+        case "DetectHarmfullApps":
+            scrName = "DetectHarmfullApps";
+            AppId = "XACBA";
+            menuItemId = "30";
+            break;
+        case "Notification":
+            scrName = "Notification";
+            AppId = "XACBA";
+            menuItemId = "350";
+            break;
+        case "Gesture":
+            scrName = "GestureConfiguration";
+            AppId = "XACBA";
+            menuItemId = "34";
+            break;
+        case "Orientation":
+            scrName = "Orientation";
+            AppId = "XACBA";
+            menuItemId = "130";
+            break;
+        default:
+            MenuClose = "true";
+            break;
+    }
+    if (scrName !== "LOGOUT") {
+        if (apz.XACBA.LandingPage.menuListAccessValidator(menuItemId)) {
+            if (scrName === "viewall") {
+                apz.XACBA.LandingPage.viewall();
+            } else {
+                if (screen !== undefined) {
+                    if (apz.XACBA.LandingPage.validateScrAccessForRole(AppId, scrName, params)) {
+                        if (screen === "budgets and goals") {
+                            params.fromQAselect = "budget";
+                        }
+                        if (($("#XACBA__LandingPage__mainList_row_" + rowno).hasClass("submenu-open")) && apz.deviceGroup == "Phone") {
+                            $("#" + LandingPageBaseId + "mainList_row_" + rowno).removeClass("submenu-open");
+                            apz.toggleSidebar(params);
+                        }
+                        if (screen === apz.lits['XACBA']['RB_INTERNATIONALTRANSFER']) {
+                            var msg = {
+                                'code': 'ERR_INTRNATNLTRANFERERR',
+                                'callBack': apz.XACBA.LandingPage.fnInternationalCB
+                            };
+                            apz.dispMsg(msg);
+                        } else {
+                            apz.XACBA.LandingPage.fn_launchMicroApp(AppId, scrName, apz.appId + "__LandingPage__launchRow", params, scrStatus);
+                        }
+                    } else {
+                        apz.XACBA.LandingPage.noroleaccs()
+                        if (apz.retrieve(fromMoreMenu) === "settings" || apz.retrieve(fromMoreMenu) === "services") {
+                            $("#XACBA__LandingPage__gr_row_26").removeClass("sno");
+                        }
+                    }
+                } else {
+                    msg = {
+                        'code': 'AX_INF_COMING_SOON',
+                        'callBack': ""
+                    };
+                    apz.dispMsg(msg);
+                }
+            }
+        } else {
+            /* if ($("#XACBA__LandingPage__mainList_row_" + rowno).hasClass("submenu-open")) {
+                //menu
+            } else if (apz.deviceGroup == "Phone" && screen !== "loan contract" && screen !== "reference letter" && screen !== "apply card" && screen !==
+                "top up") {
+                apz.toggleSidebar(sidebar);
+            }
+            msg = {
+                'code': 'AX_INF_COMING_SOON',
+                'callBack': ""
+            };
+            apz.dispMsg(msg);*/
+        }
+    }
+};
+apz.XACBA.LandingPage.fnInternationalCB = function(params) {
+    if (params.choice) {
+        apz.XACBA.LandingPage.fn_launchMicroApp("transf", "transfer", apz.appId + "__LandingPage__launchRow", apz.XACBA.LandingPage
+            .InternationLaunchParams, apz.XACBA.LandingPage.InternationLaunchParams.scrStatus);
+    }
+}
+/**
+ * @Purpose    - Function to check the menu items
+ * @Developer  - Tejaswini
+ **/
+apz.XACBA.LandingPage.menuListAccessValidator = function(menuItemId) {
+    if (!apz.isNull(menuItemId)) {
+        return true;
+    } else {
+        return false;
+    }
+}
+apz.XACBA.LandingPage.menuListAccessProvider = function(menuId) {};
+/**
+ * @Purpose    - Function to hide the error msg
+ * @Developer  - Tejaswini
+ **/
+apz.XACBA.LandingPage.fnHideErrMsg = function() {
+    $("#" + LandingPageBaseId + "errorMsg").addClass('sno');
+}
+apz.XACBA.LandingPage.fnDisplayMsg = function(errObj) {
+    var appId = errObj.appId;
+    var errCode = errObj.msgCode;
+    var errmsg = apz.msgs[appId][errCode].slice(1);
+    apz.setElmValue("XACBA__LandingPage__errormsg_text", errmsg);
+    if (apz.currAppId !== 'LOGN01' || apz.currAppId !== 'Regist' || apz.currAppId !== 'forupw') {
+        $("#" + LandingPageBaseId + "errorMsg").removeClass('type1');
+        $("#" + LandingPageBaseId + "errorMsg").addClass('type2');
+    } else {
+        $("#" + LandingPageBaseId + "errorMsg").addClass('type1');
+        $("#" + LandingPageBaseId + "errorMsg").removeClass('type2');
+    }
+    $("#" + LandingPageBaseId + "errorMsg").removeClass('sno');
+}
+/**
+ * @Purpose    - Function to refresh the dashboard
+ * @Developer  - Tejaswini
+ **/
+apz.XACBA.LandingPage.refreshDashBoard = function(refreshDashbd, callbackFn) {
+    apz.currAppId = "XACBA";
+    if (refreshDashbd) {
+        //apz.store("sbalancerefrsh", false);
+        //apz.dashbd.DashBoard.fnCommonRefreshCall(callbackFn);
+        CALL_BACK = callbackFn;
+        var lreq = {
+            "dashboardRefreshObj": {}
+        };
+        var lServerParams = {
+            "ifaceName": "dashbdRefreshCall",
+            "req": lreq,
+            "buildReq": "N",
+            "paintResp": "N",
+            "async": false,
+            "callBack": apz.XACBA.LandingPage.fnCommonRefreshCB
+        };
+        apz.startLoader();
+        setTimeout(function() {
+            apz.server.callServer(lServerParams);
+        }, 0);
+        //apz.server.callServer(lServerParams);
+    } else {
+        callbackFn('true');
+    }
+};
+apz.XACBA.LandingPage.fnCommonRefreshCB = function(params) {
+    apz.currAppId = "XACBA";
+    if (params.status) {
+        if (!params.errors) {
+            apz.XACBA.LandingPage.SPARAMS.dashboardObj = {};
+            apz.XACBA.LandingPage.SPARAMS.dashboardObj = params.res.XACBA__dashbdRefreshCall_Res;
+            apz.XACBA.LandingPage.fnActiveAccounnt(apz.XACBA.LandingPage.SPARAMS);
+            apz.store("sbalancerefrsh", false);
+            apz.XACBA.LandingPage.fn_loadAccountsList()
+            CALL_BACK('true', apz.XACBA.LandingPage.SPARAMS);
+        } else {
+            if (params.errors[0].errorCode !== "$APZ-SMS-EX-003") {
+                var lMsg = {
+                    "message": params.resFull.appzillonErrors[0].errorMessage
+                };
+                apz.dispMsg(lMsg);
+            } else {
+                apz.app.logout();
+            }
+        }
+    } else {
+        if (params.code === 'APZ-SVR-ERR') {
+            apz.XACBA.LandingPage.LaunchFirstPage();
+        }
+    }
+}
+/**
+ * @Purpose    - Function to generate unique ref no
+ * @Developer  - Ashwini Patil
+ **/
+apz.XACBA.LandingPage.generateuniqueRefNoForPostLogin = function() {
+    var ldate = Date.now();
+    var ldateStr = new Date(ldate).toString();
+    var ldateNum = ldateStr.replace(/\D/g, '');
+    var a = ldateNum.substring(0, 2);
+    var res = ldateNum.substring(4, 12);
+    var n = new Date().getMonth();
+    var m = n + 1;
+    var d = new Date();
+    var ms = d.getMilliseconds();
+    return res + m + a + ms;
+}
+/**
+ * @Purpose    - Function to start device  back functionality
+ * @Developer  - Ashwini Patil
+ **/
+apz.XACBA.LandingPage.funOnDeviceBackPress = function() {
+    var json = {};
+    json = {
+        "backButtonEvent": "on"
+    }
+    json.callBack = apz.XACBA.LandingPage.funOnDeviceBackPressCallback;
+    json.id = "EVENTS_ID";
+    apz.ns.detectEvents(json);
+};
+apz.XACBA.LandingPage.funOnDeviceBackPressCallback = function(params) {
+    if (params.status) {
+        if (apz.currAppId === "XACBA") {
+            apz.XACBA.LandingPage.fnLogout();
+        } else {
+            // if (apz.XACBA.LandingPage.showBack) {
+            apz.XACBA.LandingPage.fnBackPressed();
+            // }
+        }
+    } else {
+        apz.XACBA.LandingPage.fnLaunchDashBoard();
+    }
+}
+/**
+ * @Purpose    - Function to end the device back functionality
+ * @Developer  - Ashwini Patil
+ **/
+apz.XACBA.LandingPage.funOffDeviceBackPress = function() {
+    var json = {};
+    json = {
+        "backButtonEvent": "off"
+    }
+    json.callBack = apz.XACBA.LandingPage.funOffDeviceBackPressCallback;
+    json.id = "EVENTS_ID";
+    apz.ns.detectEvents(json);
+};
+apz.XACBA.LandingPage.funOffDeviceBackPressCallback = function(params) {
+    if (params.status) {
+        //fundeviceCB
+    }
+}
+apz.XACBA.LandingPage.fnOpenChatWindow = function() {
+    $('#XACBA__LandingPage__closeChatWindow').removeClass("sno");
+    $('#XACBA__LandingPage__openChatWindow').addClass("sno");
+    $('#XACBA__LandingPage__chatWindowRow_row').removeClass("sno");
+    $('#XACBA__LandingPage__chatWindowRow_row').html("<iframe id = 'chatIframe' src=''/>");
+    document.getElementById("chatIframe").src = "https://chat.xacbank.mn/I3Root/indexCIF.html?XacParam=ClientID|" + apz.userExtId
+};
+apz.XACBA.LandingPage.fnCloseChatWindow = function() {
+    $('#Contac__ContactScreen__chatWindow_row').empty();
+    $('#XACBA__LandingPage__closeChatWindow').addClass("sno");
+    $('#XACBA__LandingPage__openChatWindow').removeClass("sno");
+    $('#XACBA__LandingPage__chatWindowRow_row').addClass("sno");
+}
+apz.XACBA.LandingPage.fnmenuClose = function() {
+    $("#" + LandingPageBaseId + "transferMenu").addClass('sno');
+    $("#" + LandingPageBaseId + "spendAnalyserMenu").addClass('sno');
+    $("#" + LandingPageBaseId + "serviceRequestMenu").addClass('sno');
+    $("#" + LandingPageBaseId + "settingsMenu").addClass('sno');
+    $("#" + LandingPageBaseId + "calculatorMenu").addClass('sno');
+    $("#" + LandingPageBaseId + "qpayMenu").addClass('sno');
+}
+apz.XACBA.LandingPage.fnNotificationtoshow = function() {
+    apz.XACBA.LandingPage.NotifIntf();
+}
+apz.XACBA.LandingPage.NotifIntf = function() {
+    var request = {};
+    var params = {};
+    request = {};
+    request.cifid = apz.userExtId;
+    request.userid = apz.userId;
+    params.callBackObj = this;
+    params.appId = "XACBA";
+    params.buildReq = "N";
+    params.paintResp = "N";
+    params.req = request;
+    params.ifaceName = "notificationmsg";
+    params.async = true;
+    params.callBack = apz.XACBA.LandingPage.NotifIntfCB;
+    apz.startLoader();
+    apz.server.callServer(params);
+}
+apz.XACBA.LandingPage.NotifIntfCB = function(params) {
+    var Count = 0
+    if (params.errors === undefined) {
+        if (params.res.XACBA__notificationmsg_Res.length > 0) {
+            /*for (var i = 0; i < params.res.XACBA__notificationmsg_Res.length; i++) {
+                if (params.res.XACBA__notificationmsg_Res[i].MESSAGE_STATUS === "UNREAD") {
+                    Count++;
+                }
+            }
+            $("span.not-num").find('span').prevObject.remove();
+            if (Count !== 0) {
+                $("#XACBA__LandingPage__notificationbtn").append("<span class='not-num notification-count'></span>");
+                $("#XACBA__LandingPage__notificationbtn").addClass("btn-notification");
+                $("span.not-num").find('span').prevObject.append(Count);
+            }*/
+            $("#" + LandingPageBaseId + "sc_row_60").addClass('sno');
+            $("#" + LandingPageBaseId + "ct_lst_5").removeClass('sno');
+            apz.data.scrdata.XACBA__inappmsgpaint_Res = {};
+            apz.data.scrdata.XACBA__inappmsgpaint_Res = [];
+            apz.data.scrdata.XACBA__inappmsgpaint_Res = params.res.XACBA__notificationmsg_Res;
+            apz.data.loadData("inappmsgpaint", "XACBA");
+            for (var imsg = 0; imsg < apz.data.scrdata.XACBA__inappmsgpaint_Res.length; imsg++) {
+                if (apz.data.scrdata.XACBA__inappmsgpaint_Res[imsg].MESSAGE_STATUS === "UNREAD") {
+                    $("#" + LandingPageBaseId + "ct_lst_5_row_" + imsg).addClass('unread');
+                } else {
+                    $("#" + LandingPageBaseId + "ct_lst_5_row_" + imsg).removeClass("unread");
+                }
+            }
+        }
+    } else {
+        //$("span.not-num").find('span').prevObject.remove();
+        $("#" + LandingPageBaseId + "sc_row_60").removeClass('sno');
+        $("#" + LandingPageBaseId + "ct_lst_5").addClass('sno');
+    }
+    if (apz.deviceGroup === "Phone") {
+        $("#" + LandingPageBaseId + "ct_nav_12").removeClass('sno');
+    } else {
+        $("#" + LandingPageBaseId + "ct_nav_12").addClass('sno');
+    }
+    apz.stopLoader();
+}
+apz.XACBA.LandingPage.fn_closeInappNoti = function() {
+    $("#XACBA__LandingPage__notificationbtn").popover('hide').data(popoverdata).inState.click = false
+    if (apz.XACBA.LandingPage.NotifyCounts > 0) {
+        apz.XACBA.LandingPage.updateNotificaionStatus();
+    }
+}
+apz.XACBA.LandingPage.keyboardSTOP = function() {
+    debugger;
+    var json = {};
+    json.id = "KEYBOARDLISTENER";
+    json.callBack = apz.XACBA.LandingPage.keyboardstopCall;
+    apz.ns.stopKeyboardListener(json);
+}
+apz.XACBA.LandingPage.keyboardstopCall = function(json) {
+    debugger;
+}
+apz.XACBA.LandingPage.stoppullback = function() {
+    var json = {};
+    json.id = "DISPULLDOWN_ID";
+    json.callBack = apz.XACBA.LandingPage.stoppullbackCB;
+    apz.ns.disablePullDown(json);
+}
+apz.XACBA.LandingPage.stoppullbackCB = function(params) {}
+/*New design jan 27 2021*/
+apz.XACBA.LandingPage.fnSideMenu = function(btnVal) {
+    if (apz.deviceType != "WEB") {
+        apz.XACBA.LandingPage.keyboardSTOP();
+    }
+    if (apz.deviceType != "WEB") {
+        apz.XACBA.LandingPage.stoppullback();
+    }
+    if (apz.deviceType != "WEB") {
+        var json = {};
+        json.id = "BARCODE_ID";
+        json.callBack = scanBarcodeCallback;
+        apz.ns.stopBarcodeScan(json);
+    }
+    if (apz.deviceType == 'WEB') {
+        $("#XACBA__LandingPage__ct_lst_9_row_8").hide();
+    }
+    $("#XACBA__LandingPage__accountsBreadcrumb").addClass("sno");
+    $("#XACBA__LandingPage__sc_col_7,#XACBA__LandingPage__sc_col_17").removeClass("sno");
+    window.scrollTo(0, 0);
+    apz.XACBA.LandingPage.servBack = "";
+    apz.XACBA.LandingPage.fromDashToAllAccounts = false;
+    apz.XACBA.LandingPage.SPARAMS.selectedAccFlag = false;
+    if (apz.XACBA.LandingPage.SPARAMS.allaccScreen !== undefined) {
+        apz.XACBA.LandingPage.SPARAMS.allaccScreen = false;
+        apz.XACBA.LandingPage.SPARAMS.Carddirect = false;
+        apz.XACBA.LandingPage.SPARAMS.CarddirectAcc = "";
+    }
+    apz.store("fromScreenAcc", "");
+    if (btnVal === "Home") {
+        apz.store(fromMoreMenu, "");
+        $("#" + LandingPageBaseId + "ct_lst_3 .active").removeClass("active");
+        apz.XACBA.LandingPage.fnLaunchHome();
+        /*  $("#" + LandingPageBaseId + "myaccounts_row").removeClass('sno');
+        $("#" + LandingPageBaseId + "more_row").addClass('sno');
+        $("#" + LandingPageBaseId + "launchRow").addClass('sno');
+        $("#" + LandingPageBaseId + "quickLinks").removeClass('sno');
+        $("#" + LandingPageBaseId + "el_icn_6").addClass('active');
+        apz.currAppId = "XACBA";
+         apz.XACBA.LandingPage.refreshDashBoard(true, apz.XACBA.LandingPage.fn_launchMicroAppCB);*/
+    } else if (btnVal === "Products") {
+        apz.store(fromMoreMenu, "");
+        /*$("#" + LandingPageBaseId + "myaccounts_row").addClass('sno');
+        $("#" + LandingPageBaseId + "quickLinks").addClass('sno');
+        $("#" + LandingPageBaseId + "more_row,#" + LandingPageBaseId + "gr_row_26").addClass('sno');
+        $("#" + LandingPageBaseId + "launchRow").removeClass('sno');
+        $("#" + LandingPageBaseId + "el_icn_7").addClass('active');
+        $("#" + LandingPageBaseId + "notificationbtn").addClass('sno');
+        $("#" + LandingPageBaseId + "logoutBtn").removeClass('sno');*/
+        // apz.XACBA.LandingPage.dashboardFlag = true;
+        // apz.XACBA.LandingPage.refreshDashBoard(true, apz.XACBA.LandingPage.fnLaunchHomeCB);
+        apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_ACCOUNTS'], apz.XACBA.LandingPage.USEROBJ);
+    } else if (btnVal === "More") {
+        apz.store(fromMoreMenu, "more");
+        $("#" + LandingPageBaseId + "ct_lst_3 .active").removeClass("active");
+        $("#" + LandingPageBaseId + "myaccounts_row,#" + LandingPageBaseId + "gr_row_26").addClass('sno');
+        $("#" + LandingPageBaseId + "quickLinks").addClass('sno');
+        $("#" + LandingPageBaseId + "more_row").removeClass('sno');
+        $("#" + LandingPageBaseId + "launchRow").addClass('sno');
+        $("#" + LandingPageBaseId + "el_icn_8").addClass('active');
+        $("#" + LandingPageBaseId + "notificationbtn").addClass('sno');
+        $("#" + LandingPageBaseId + "logoutBtn").removeClass('sno');
+        $("#" + LandingPageBaseId + "gr_row_26").addClass('sno');
+        // apz.XACBA.LandingPage.fnInitialise();
+        if (apz.deviceGroup === "Phone") {
+            $("#" + LandingPageBaseId + "gr_col_4").removeClass('sno');
+        }
+        apz.XACBA.LandingPage.CountMailfn();
+        apz.currAppId = "XACBA";
+        // apz.XACBA.LandingPage.dashboardFlag = true;
+        //apz.XACBA.LandingPage.refreshDashBoard(true, apz.XACBA.LandingPage.fnLaunchHomeCB);
+    }
+    if (btnVal !== "Products") {
+        $("#" + LandingPageBaseId + "header2").addClass("sno");
+        $("#" + LandingPageBaseId + "header1").removeClass("sno");
+        $("body").addClass("pg-dashboard");
+    }
+}
+scanBarcodeCallback = function(params) {}
+apz.XACBA.LandingPage.fn_loadAccountsList = function() {
+    apz.XACBA.LandingPage.dashboardActiveAccounts = [];
+    for (var activeArry = 0; activeArry < Object(apz.XACBA.LandingPage.SPARAMS.dashboardObj.accountSummaryResp.accountDtlsResp.acctCcyWiseAry)
+        .length; activeArry++) {
+        for (var activeArry1 = 0; activeArry1 < Object(apz.XACBA.LandingPage.SPARAMS.dashboardObj.accountSummaryResp.accountDtlsResp
+                .acctCcyWiseAry)[activeArry].length; activeArry1++) {
+            if (Object(apz.XACBA.LandingPage.SPARAMS.dashboardObj.accountSummaryResp.accountDtlsResp.acctCcyWiseAry)[activeArry][activeArry1]
+                .isEnabledForBanking === "Y") {
+                apz.XACBA.LandingPage.dashboardActiveAccounts.push(Object(apz.XACBA.LandingPage.SPARAMS.dashboardObj.accountSummaryResp
+                    .accountDtlsResp.acctCcyWiseAry)[activeArry][activeArry1]);
+            }
+        }
+    }
+    apz.XACBA.LandingPage.funSortPrimaryAccount(apz.XACBA.LandingPage.dashboardActiveAccounts);
+}
+apz.XACBA.LandingPage.funSortPrimaryAccount = function(primaryVal) {
+    var primaryAcc = [];
+    var nonPrimaryAcc = [];
+    var primaryValSort = primaryVal;
+    for (var j = 0; j < primaryValSort.length; j++) {
+        if (primaryValSort[j].isPrimaryAc === "Y") {
+            primaryAcc.push(primaryValSort[j]);
+        } else {
+            nonPrimaryAcc.push(primaryValSort[j]);
+        }
+    }
+    var newArray = primaryAcc.concat(nonPrimaryAcc);
+    apz.XACBA.LandingPage.dashboardActiveAccounts = newArray;
+    apz.XACBA.LandingPage.fn_loadAccountsList1();
+}
+apz.XACBA.LandingPage.fn_loadAccountsList1 = function() {
+    apz.data.scrdata.XACBA__acctsArrayList_Res = [];
+    apz.data.scrdata.XACBA__acctsArrayList_Res.acctCcyWiseAry = {};
+    apz.data.scrdata.XACBA__acctsArrayList_Res.acctCcyWiseAry = apz.XACBA.LandingPage.dashboardActiveAccounts;
+    apz.data.loadData("acctsArrayList", "XACBA");
+    if (apz.XACBA.LandingPage.dashboardActiveAccounts.length > 0) {
+        for (var activeArrydash = 0; activeArrydash < apz.XACBA.LandingPage.dashboardActiveAccounts.length; activeArrydash++) {
+            $("#XACBA__LandingPage__noRecordAllaccounts").addClass("sno");
+            if (apz.XACBA.LandingPage.dashboardActiveAccounts[activeArrydash].isPrimaryAc === "Y") {
+                $("#XACBA__LandingPage__primaryAcc_" + activeArrydash).removeClass("sno");
+            } else {
+                $("#XACBA__LandingPage__primaryAcc_" + activeArrydash).addClass("sno");
+            }
+            document.getElementById("XACBA__LandingPage__imageName_" + activeArrydash).src = apz.XACBA.LandingPage.imageBasePath + apz.XACBA
+                .LandingPage.dashboardActiveAccounts[activeArrydash].imageName;
+            $("#XACBA__LandingPage__imageName_" + activeArrydash).removeClass("sno");
+        }
+    } else {
+        $("#XACBA__LandingPage__noRecordAllaccounts").removeClass("sno");
+    }
+    if (apz.XACBA.LandingPage.dashboardFlag) {
+        apz.XACBA.LandingPage.fnFetchSavedTransaction();
+        apz.XACBA.LandingPage.dashboardFlag = false;
+    } else {
+        apz.stopLoader();
+    }
+}
+apz.XACBA.LandingPage.fn_showAccBalance = function() {
+    $("#XACBA__LandingPage__openEyeIcon").removeClass("sno");
+    $("#XACBA__LandingPage__closeEyeIcon").addClass("sno");
+    for (var accArry = 0; accArry < apz.XACBA.LandingPage.dashboardActiveAccounts.length; accArry++) {
+        $("#XACBA__LandingPage__balHide_" + accArry).addClass("sno");
+        $("#XACBA__acctsArrayList__o__acctCcyWiseAry__balnce_" + accArry).removeClass("sno");
+    }
+}
+apz.XACBA.LandingPage.fn_hdeAccBalance = function() {
+    $("#XACBA__LandingPage__openEyeIcon").addClass("sno");
+    $("#XACBA__LandingPage__closeEyeIcon").removeClass("sno");
+    for (var accArry = 0; accArry < apz.XACBA.LandingPage.dashboardActiveAccounts.length; accArry++) {
+        $("#XACBA__LandingPage__balHide_" + accArry).removeClass("sno");
+        $("#XACBA__acctsArrayList__o__acctCcyWiseAry__balnce_" + accArry).addClass("sno");
+    }
+}
+apz.XACBA.LandingPage.fnFetchSavedTrans = function() {
+    apz.currAppId = "XACBA"
+    // apz.startLoader();
+    var req = {
+        "TbAbamSaveTransactionRequest": {}
+    };
+    var lServerParam = {
+        "ifaceName": "FetchSavedTrans",
+        "buildReq": "N",
+        "req": req,
+        "paintResp": "N",
+        "async": false,
+        "callBack": apz.XACBA.LandingPage.fnFetchSavedTransCB
+    };
+    //setTimeout(function() {
+    apz.server.callServer(lServerParam);
+    //}, 0);
+}
+apz.XACBA.LandingPage.fnFetchSavedTransCB = function(params) {
+    apz.XACBA.LandingPage.fnTransResp = params;
+    if (params.status && params.resFull.appzillonHeader.status) {
+        if (!params.errors) {
+            if (params.resFull.appzillonBody.XACBA__FetchSavedTrans_Res.hasOwnProperty("responseHeader")) {
+                if (params.resFull.appzillonBody.XACBA__FetchSavedTrans_Res.responseHeader.ResponseCode === "0") {
+                    if (params.resFull.appzillonBody.XACBA__FetchSavedTrans_Res.tbAbamSaveTransactionList.length !== 0) {
+                        var respData = params.resFull.appzillonBody.XACBA__FetchSavedTrans_Res.tbAbamSaveTransactionList;
+                        apz.XACBA.LandingPage.fnTransData = params.resFull.appzillonBody.XACBA__FetchSavedTrans_Res.tbAbamSaveTransactionList;
+                        apz.data.scrdata.XACBA__TransactionDetails_Res = {};
+                        apz.data.scrdata.XACBA__TransactionDetails_Res.tbAbamSaveTransactionList = [];
+                        var arrLen = 5
+                        $("#" + LandingPageBaseId + "norecordfounfrow").addClass('sno');
+                        $("#" + LandingPageBaseId + "ct_lst_13").removeClass('sno');
+                        if (respData.length < 5) {
+                            arrLen = respData.length;
+                        }
+                        for (var i = 0; i < arrLen; i++) {
+                            respData[i].maskAccNo = apz.app.Common.fnAccNoMask(respData[i].beneficiaryAccountNo);
+                            respData[i].trxAmount = apz.app.Common.fn_FormatAmount(respData[i].trxAmount);
+                            apz.data.scrdata.XACBA__TransactionDetails_Res.tbAbamSaveTransactionList.push(respData[i]);
+                        }
+                        apz.data.loadData("TransactionDetails", "XACBA");
+                    }
+                } else {
+                    $("#" + LandingPageBaseId + "ct_lst_13").addClass('sno');
+                    $("#" + LandingPageBaseId + "norecordfounfrow").removeClass('sno');
+                }
+            } else {
+                $("#" + LandingPageBaseId + "ct_lst_13").addClass('sno');
+                $("#" + LandingPageBaseId + "norecordfounfrow").removeClass('sno');
+            }
+            apz.XACBA.LandingPage.NotifIntfCount();
+        } else {
+            if (params.errors[0].errorCode !== "$APZ-SMS-EX-003") {
+                var lMsg = {
+                    "message": params.resFull.appzillonErrors[0].errorMessage
+                };
+                apz.dispMsg(lMsg);
+            } else {
+                apz.app.logout();
+            }
+        }
+    } else {
+        apz.stopLoader();
+        if (params.code === 'APZ-SVR-ERR') {
+            apz.XACBA.LandingPage.LaunchFirstPage();
+        }
+        /* if (params.errors[0].errorCode !== "$APZ-SMS-EX-003") {
+            var lMsg = {
+                "message": params.resFull.appzillonErrors[0].errorMessage
+            };
+            apz.dispMsg(lMsg);
+        } else {
+            apz.app.logout();
+        }*/
+    }
+    //apz.stopLoader();
+}
+apz.XACBA.LandingPage.fnFetchSavedTransaction = function() {
+    if (apz.XACBA.LandingPage.SPARAMS.dashboardObj.hasOwnProperty("custWishTxnListResp")) {
+        if (apz.XACBA.LandingPage.SPARAMS.dashboardObj.custWishTxnListResp.custEnabledQuickMenuDtls.hasOwnProperty("tbAbamSaveTransactionList") &&
+            apz.XACBA.LandingPage.SPARAMS.dashboardObj.custWishTxnListResp.custEnabledQuickMenuDtls.tbAbamSaveTransactionList !== undefined && apz
+            .XACBA.LandingPage.firstTimeLogin === "true") {
+            if (apz.XACBA.LandingPage.firstTimeLogin === "true") {
+                apz.XACBA.LandingPage.firstTimeLogin = "false";
+            }
+            if (apz.XACBA.LandingPage.SPARAMS.dashboardObj.custWishTxnListResp.custEnabledQuickMenuDtls.tbAbamSaveTransactionList !== null) {
+                if (apz.XACBA.LandingPage.SPARAMS.dashboardObj.custWishTxnListResp.custEnabledQuickMenuDtls.tbAbamSaveTransactionList.length >
+                    0) {
+                    var respData = apz.XACBA.LandingPage.SPARAMS.dashboardObj.custWishTxnListResp.custEnabledQuickMenuDtls
+                        .tbAbamSaveTransactionList;
+                    apz.XACBA.LandingPage.fnTransData = apz.XACBA.LandingPage.SPARAMS.dashboardObj.custWishTxnListResp.custEnabledQuickMenuDtls
+                        .tbAbamSaveTransactionList;
+                    $("#" + LandingPageBaseId + "ct_lst_13").removeClass('sno');
+                    $("#" + LandingPageBaseId + "norecordfounfrow").addClass('sno');
+                    apz.data.scrdata.XACBA__TransactionDetails_Res = {};
+                    apz.data.scrdata.XACBA__TransactionDetails_Res.tbAbamSaveTransactionList = [];
+                    var arrLen = 5
+                    if (respData.length < 5) {
+                        arrLen = respData.length;
+                    }
+                    for (var i = 0; i < arrLen; i++) {
+                        respData[i].maskAccNo = apz.app.Common.fnAccNoMask(respData[i].beneficiaryAccountNo);
+                        respData[i].trxAmount = apz.app.Common.fn_FormatAmount(respData[i].trxAmount);
+                        apz.data.scrdata.XACBA__TransactionDetails_Res.tbAbamSaveTransactionList.push(respData[i]);
+                    }
+                    apz.data.loadData("TransactionDetails", "XACBA");
+                } else {
+                    $("#" + LandingPageBaseId + "ct_lst_13").addClass('sno');
+                    $("#" + LandingPageBaseId + "norecordfounfrow").removeClass('sno');
+                }
+            } else {
+                $("#" + LandingPageBaseId + "ct_lst_13").addClass('sno');
+                $("#" + LandingPageBaseId + "norecordfounfrow").removeClass('sno');
+            }
+            apz.XACBA.LandingPage.NotifIntfCount();
+        } else {
+            apz.XACBA.LandingPage.fnFetchSavedTrans();
+        }
+    } else {
+        apz.XACBA.LandingPage.fnFetchSavedTrans();
+    }
+};
+apz.XACBA.LandingPage.fnStopQRScanner = function() {
+    var jsonobj = {};
+    jsonobj.id = "BARCODE_ID";
+    apz.ns.stopBarcodeScan(jsonobj);
+}
+apz.XACBA.LandingPage.fnServiceMenuLoad = function(pthis) {
+    $("#" + LandingPageBaseId + "myaccounts_row").addClass('sno');
+    $("#" + LandingPageBaseId + "quickLinks").addClass('sno');
+    $("#" + LandingPageBaseId + "more_row").addClass('sno');
+    $("#" + LandingPageBaseId + "launchRow").addClass('sno');
+    $("#" + LandingPageBaseId + "el_icn_8").addClass('active');
+    $("#" + LandingPageBaseId + "gr_row_26").removeClass('sno');
+    $("#" + LandingPageBaseId + "header1").addClass("sno");
+    $("body").removeClass("pg-dashboard");
+    $("#" + LandingPageBaseId + "header2").removeClass("sno");
+    $("#" + LandingPageBaseId + "ct_lst_10").removeClass("sno");
+    if (apz.deviceType !== "WEB") {
+        $("#XACBA__LandingPage__ct_lst_10_row_6").addClass("sno");
+    } else {
+        $("#XACBA__LandingPage__ct_lst_10_row_6").removeClass("sno");
+    }
+    apz.currAppId = "XACBA";
+    var filePath = apz.getDataFilesPath("XACBA") + "/" + "interiorMenus" + ".json";
+    var content = apz.getFile(filePath);
+    if (!apz.isNull(content)) {
+        content = JSON.parse(content);
+    }
+    apz.XACBA.LandingPage.fnSetHeader("N", "N", "Y", "N", apz.XACBA.LandingPage.backFnForService, apz.XACBA.LandingPage.fnClickMenu, "N");
+    apz.data.scrdata.XACBA__interiorMenus_Req = {};
+    if (pthis === "services") {
+        apz.XACBA.LandingPage.servBack = "services";
+        if (apz.language === "en") {
+            apz.data.scrdata.XACBA__interiorMenus_Req.serviceMenu = content.serviceRequestMenu;
+        } else if (apz.language === "mn") {
+            apz.data.scrdata.XACBA__interiorMenus_Req.serviceMenu = content.serviceRequestMenuMn;
+        }
+        apz.setElmValue(LandingPageBaseId + "headerTitle", apz.lits['XACBA']['RB_SERVICES_NEW']);
+    } else if (pthis === "settings") {
+        apz.XACBA.LandingPage.servBack = "settings";
+        if (apz.language === "en") {
+            apz.data.scrdata.XACBA__interiorMenus_Req.serviceMenu = content.settingsMenu;
+        } else if (apz.language === "mn") {
+            apz.data.scrdata.XACBA__interiorMenus_Req.serviceMenu = content.settingsMenuMn;
+        }
+        apz.setElmValue(LandingPageBaseId + "headerTitle", apz.lits['XACBA']['RB_SETTING_NEW']);
+    } else if (pthis === "QpayMenu") {
+        $("#" + LandingPageBaseId + "el_icn_8").removeClass('active');
+        apz.XACBA.LandingPage.servBack = "QpayMenu";
+        if (apz.language === "en") {
+            apz.data.scrdata.XACBA__interiorMenus_Req.serviceMenu = content.qpayMenu;
+        } else if (apz.language === "mn") {
+            apz.data.scrdata.XACBA__interiorMenus_Req.serviceMenu = content.qpayMenuMn;
+        }
+        if (apz.deviceType === "WEB") {
+            $("#" + LandingPageBaseId + "ct_lst_10_row_2").addClass("sno");
+        }
+        apz.setElmValue(LandingPageBaseId + "headerTitle", apz.lits['XACBA']['RB_QPAY']);
+    } else if (pthis === "QRGeneration") {
+        $("#" + LandingPageBaseId + "el_icn_8").removeClass('active');
+        $("#" + LandingPageBaseId + "launchRow").removeClass('sno');
+        apz.setElmValue(LandingPageBaseId + "headerTitle", apz.lits['XACBA']['RB_QRGENERATION']);
+    } else if (pthis === "FAQ") {
+        $("#" + LandingPageBaseId + "el_icn_8").removeClass('active');
+        $("#" + LandingPageBaseId + "launchRow").removeClass('sno');
+        apz.setElmValue(LandingPageBaseId + "headerTitle", "FAQ");
+    } else if (pthis === "Download File") {
+        $("#" + LandingPageBaseId + "el_icn_8").removeClass('active');
+        $("#" + LandingPageBaseId + "launchRow").removeClass('sno');
+        apz.setElmValue(LandingPageBaseId + "headerTitle", "Download File");
+    }
+    $("#" + LandingPageBaseId + "backButton").removeClass('sno');
+    apz.data.loadData("interiorMenus", "XACBA");
+    if (apz.deviceType === "WEB" && pthis === "QpayMenu") {
+        $("#" + LandingPageBaseId + "ct_lst_10").removeClass('sno');
+        $("#" + LandingPageBaseId + "ct_lst_10_row_2").addClass("sno");
+    } else if (pthis === "settings") {
+        if (apz.XACBA.LandingPage.SPARAMS.dashboardObj.isTxnPassCodeAvlable === true) {
+            $("#" + LandingPageBaseId + "ct_lst_10_row_5").addClass("sno");
+        } else {
+            $("#" + LandingPageBaseId + "ct_lst_10_row_5").removeClass("sno");
+        }
+        if (apz.deviceType !== "WEB") {
+            $("#XACBA__LandingPage__ct_lst_10_row_6").removeClass("sno");
+            $("#XACBA__LandingPage__ct_lst_10_row_7").removeClass("sno");
+            $("#XACBA__LandingPage__ct_lst_10_row_8").removeClass("sno");
+        } else {
+            $("#XACBA__LandingPage__ct_lst_10_row_6").addClass("sno");
+            $("#XACBA__LandingPage__ct_lst_10_row_7").addClass("sno");
+            $("#XACBA__LandingPage__ct_lst_10_row_8").addClass("sno");
+            $("#XACBA__LandingPage__ct_lst_10_row_1").addClass("sno");
+            $("#XACBA__LandingPage__ct_lst_10_row_10").addClass("sno");
+            
+        }
+    }
+}
+apz.XACBA.LandingPage.fnServiceMenus = function(pthis) {
+    var RowNo = $(pthis).attr("rowNo");
+    var functionVal = apz.getElmValue("XACBA__interiorMenus__i__serviceMenu__menuItem_" + RowNo);
+    /*if (functionVal !== apz.lits['XACBA']['RB_GEN_CAM'] && functionVal !== apz.lits['XACBA']['RB_ALERTNOTIFICATIONS'] && functionVal !== apz.lits[
+        'XACBA']['RB_MNGLIMIT']) {*/
+    $("#XACBA__LandingPage__gr_row_26").addClass("sno");
+    if (pthis.innerText === apz.lits['XACBA']['RB_PROFILE']) {
+        apz.XACBA.LandingPage.USEROBJ.fromdashboardtoprofile = "false"
+    }
+    apz.XACBA.LandingPage.fnMenuNav1(pthis.innerText, apz.XACBA.LandingPage.USEROBJ, true);
+    /* } else {
+        var msgServ = {
+            'code': 'AX_INF_COMING_SOON',
+            'callBack': ""
+        };
+        apz.dispMsg(msgServ);
+    }*/
+    if (apz.XACBA.LandingPage.SPARAMS.dashboardObj.isTxnPassCodeAvlable === true) {
+        $("#" + LandingPageBaseId + "ct_lst_10_row_5").addClass("sno");
+    } else {
+        $("#" + LandingPageBaseId + "ct_lst_10_row_5").removeClass("sno");
+    }
+}
+apz.XACBA.LandingPage.viewall = function() {
+    var userObj = {};
+    userObj = apz.XACBA.LandingPage.SPARAMS;
+    userObj.tranData = apz.XACBA.LandingPage.fnTransData;
+    userObj.animation = ANIMATION_FORWARD;
+    /*  apz.XACBA.LandingPage.SPARAMS = userObj;
+    apz.XACBA.LandingPage.SPARAMS.Navigation = userObj.Navigation;
+    apz.XACBA.LandingPage.fnSetNavi = userObj.Navigation.setNavigation;
+   apz.XACBA.LandingPage.fnSendMenuParams = userObj.Navigation.sendMenuParams;
+    var lParams = {
+        "showMainHeader": "N",
+        "showLogo": "Y",
+        "showNotifiBtn": "Y",
+        "showUserImg": "Y",
+        "DashBd": true,
+        "backPressed": apz.dashbd.DashBoard.fnBack,
+        "MenuClick": apz.dashbd.DashBoard.fnClickMenu,
+        "directHome": apz.dashbd.DashBoard.directHome
+    };
+    apz.XACBA.LandingPage.fnSetNavi(lParams);*/
+    if (apz.XACBA.LandingPage.validateScrAccessForRole("transf", "viewall", apz.XACBA.LandingPage.SPARAMS)) {
+        /*$("#" + LandingPageBaseId + "myaccounts_row").addClass("sno");
+        $("#" + LandingPageBaseId + "quickLinks,#" + LandingPageBaseId + "gr_col_4").addClass("sno");
+        $("#" + LandingPageBaseId + "ct_lst_3 .active").removeClass("active");*/
+        apz.XACBA.LandingPage.fn_launchMicroApp("transf", "viewall", "XACBA__LandingPage__launchRow", userObj, true);
+    } else {
+        var msg = {
+            'code': 'XAC_INF_SCR_NOT_ALWD',
+            'appId': "XACBA",
+        };
+        apz.dispMsg(msg);
+    }
+}
+apz.XACBA.LandingPage.fnTransfer = function(pthis) {
+    var lrowNo = $(pthis).attr('rowNo');
+    var ownAccounts = apz.XACBA.LandingPage.dashboardActiveAccounts;
+    var Index = ownAccounts.map(function(item) {
+        return item.accId;
+    }).indexOf(apz.data.scrdata.XACBA__TransactionDetails_Res.tbAbamSaveTransactionList[lrowNo].fromAccountNum);
+    if (Index !== -1) {
+        var toAccDets = ownAccounts[Index];
+        var flag = true;
+        if (apz.data.scrdata.XACBA__TransactionDetails_Res.tbAbamSaveTransactionList[lrowNo].txnType === "OWN") {
+            var benIndex = ownAccounts.map(function(item) {
+                return item.accId;
+            }).indexOf(apz.data.scrdata.XACBA__TransactionDetails_Res.tbAbamSaveTransactionList[lrowNo].beneficiaryAccountNo);
+            if (benIndex === -1) {
+                flag = false;
+            }
+        }
+        if (flag) {
+            apz.XACBA.LandingPage.SPARAMS.fromScreen = "";
+            apz.XACBA.LandingPage.SPARAMS.lFromScreen = "";
+            apz.XACBA.LandingPage.SPARAMS.selectedAccForStemnt.ACCOUNT_NUMBER = toAccDets.accId;
+            apz.XACBA.LandingPage.SPARAMS.selectedAccForStemnt.ACCOUNT_TYPE = toAccDets.accType;
+            apz.XACBA.LandingPage.SPARAMS.selectedAccForStemnt.CURRENCY = toAccDets.currencyId;
+            apz.XACBA.LandingPage.SPARAMS.selectedAccForStemnt.ACCOUNT_HOLDER_NAME = toAccDets.accname;
+            apz.XACBA.LandingPage.SPARAMS.selectedAccForStemnt.NICKNAME = toAccDets.acNickname;
+            apz.XACBA.LandingPage.SPARAMS.selectedAccForStemnt.BALANCE = toAccDets.balnce;
+            apz.XACBA.LandingPage.SPARAMS.selectedAccForStemnt.BRANCHID = toAccDets.branchId;
+            var userObj = {};
+            userObj = apz.XACBA.LandingPage.SPARAMS;
+            userObj.toAccDetails = apz.data.scrdata.XACBA__TransactionDetails_Res.tbAbamSaveTransactionList[lrowNo];
+            userObj.saveTranFlag = true;
+            userObj.animation = ANIMATION_FORWARD;
+            if (userObj.toAccDetails.txnType === "SWIFT_INRNL") {
+                apz.XACBA.LandingPage.fnIntrnUserObj = userObj;
+                var msg = {
+                    'code': 'ERR_INTRNATNLTRANFERERR',
+                    'callBack': apz.XACBA.LandingPage.fnInternationalViewCB,
+                    'appId': 'XACBA'
+                };
+                apz.dispMsg(msg);
+            } else {
+                apz.XACBA.LandingPage.SPARAMS.selectedAccFlag = true;
+                apz.XACBA.LandingPage.fn_launchMicroApp("transf", "transfer", apz.appId + "__LandingPage__launchRow", userObj, true);
+            }
+        } else {
+            apz.dispMsg({
+                "code": "ERR_CREDACCNOTACTI",
+                "appId": "XACBA"
+            })
+        }
+    } else {
+        apz.dispMsg({
+            "code": "ERR_DEBACCNOTACTI",
+            "appId": "XACBA"
+        })
+    }
+}
+apz.XACBA.LandingPage.fnInternationalViewCB = function(params) {
+    if (params.choice) {
+        apz.XACBA.LandingPage.SPARAMS.selectedAccFlag = true;
+        apz.XACBA.LandingPage.fn_launchMicroApp("transf", "internationalTransfer", apz.appId + "__LandingPage__launchRow", apz.XACBA.LandingPage
+            .fnIntrnUserObj, true);
+    } else {
+        apz.XACBA.LandingPage.fnIntrnUserObj = "";
+    }
+}
+apz.XACBA.LandingPage.viewallSaveTransction = function() {
+    apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_SaveTransaction'], apz.XACBA.LandingPage.SPARAMS, true)
+}
+apz.XACBA.LandingPage.fnBack = function() {
+    //code
+};
+apz.XACBA.LandingPage.directHome = function() {
+    $("#XACBA__LandingPage__accountsBreadcrumb").addClass("sno");
+    apz.store(fromMoreMenu, "");
+    apz.XACBA.LandingPage.fromDashToAllAccounts = false;
+    if (apz.deviceType !== "WEB") {
+        apz.XACBA.LandingPage.fnStopQRScanner();
+    }
+    //  apz.XACBA.LandingPage.dashboardFlag = true;
+    apz.XACBA.LandingPage.servBack = "";
+    apz.XACBA.LandingPage.fnLaunchHome();
+    //code
+};
+apz.XACBA.LandingPage.fnClickMenu = function() {
+    //code
+}
+apz.XACBA.LandingPage.fnSetHeader = function(mainHead, sLogo, sNoti, sUserimg, backfn, MenuCli, heading, bankIcon) {
+    var lParams = {
+        "showMainHeader": mainHead,
+        "showLogo": sLogo,
+        "showNotifiBtn": sNoti,
+        "showUserImg": sUserimg,
+        "backPressed": backfn,
+        "MenuClick": MenuCli,
+        "directHome": apz.XACBA.LandingPage.directHome,
+        "showBankIcon": bankIcon,
+        "showHomeBtn": ""
+    };
+    apz.XACBA.LandingPage.fnSetNavigation(lParams);
+}
+apz.XACBA.LandingPage.backFnForService = function() {
+    if (apz.XACBA.LandingPage.servBack === "QpayMenu" && !($("#XACBA__LandingPage__el_icn_8").hasClass("active"))) {
+        //  $("#XACBA__LandingPage__ct_lst_10").addClass("sno");
+        apz.XACBA.LandingPage.directHome()
+    } else if (apz.XACBA.LandingPage.servBack === "" && !($("#XACBA__LandingPage__el_icn_8").hasClass("active"))) {
+        //  $("#XACBA__LandingPage__ct_lst_10").addClass("sno");
+        apz.XACBA.LandingPage.directHome()
+    } else {
+        apz.XACBA.LandingPage.fnSideMenu("More");
+    }
+}
+apz.XACBA.LandingPage.updateNotificaionStatus = function() {
+    var req = {
+        "updateInappStatus": {
+            "custId": apz.userExtId,
+            "userId": apz.userId
+        }
+    }
+    var lServerParam = {
+        "ifaceName": "NotifyUpdate",
+        "buildReq": "N",
+        "req": req,
+        "paintResp": "N",
+        "appId": "XACBA",
+        "async": true,
+        "callBack": apz.XACBA.LandingPage.updateNotificaionStatusCB
+    };
+    apz.startLoader();
+    apz.server.callServer(lServerParam);
+}
+apz.XACBA.LandingPage.updateNotificaionStatusCB = function(params) {
+    if (params.status) {
+        if (!params.errors) {
+            if (params.res.XACBA__NotifyUpdate_Res.responseHeader.ResponseCode === "0") {
+                $("span.not-num").find('span').prevObject.remove();
+            }
+        } else {
+            if (params.errors[0].errorCode !== "$APZ-SMS-EX-003") {
+                var lMsg = {
+                    "message": params.errors[0].errorMessage
+                };
+                apz.dispMsg(lMsg);
+            } else {
+                apz.app.logout();
+            }
+        }
+    }
+    apz.stopLoader();
+}
+apz.XACBA.LandingPage.CountMailfn = function() {
+    var request = {};
+    var params = {};
+    request = {};
+    request.cifid = apz.userExtId;
+    params.appId = "XACBA";
+    params.callBackObj = this;
+    params.buildReq = "N";
+    params.paintResp = "N";
+    params.req = request;
+    params.ifaceName = "Mailcount";
+    params.async = true;
+    params.callBack = apz.XACBA.LandingPage.CountMailfnCB;
+    apz.startLoader();
+    apz.server.callServer(params);
+}
+apz.XACBA.LandingPage.CountMailfnCB = function(params) {
+    apz.XACBA.LandingPage.UnreadMail = params;
+    apz.stopLoader()
+    if (params.status) {
+        if (!params.errors) {
+            var Count = apz.XACBA.LandingPage.UnreadMail.res.XACBA__Mailcount_Res[0]["COUNT(*)"];
+            if (Count > 0) {
+                $("span.not-num").find('span').prevObject.remove();
+                if (apz.deviceType === "WEB") {
+                    $("#XACBA__LandingPage__el_btn_40_6").append("<span class='not-num notification-count notification-count1'></span>");
+                    $("#XACBA__LandingPage__el_btn_40_6").addClass("btn-notification");
+                } else {
+                    $("#XACBA__LandingPage__el_btn_40_6").append("<span class='not-num notification-count notification-count1'></span>");
+                    $("#XACBA__LandingPage__el_btn_40_6").addClass("btn-notification");
+                }
+                $("span.not-num").find('span').prevObject.append(Count);
+            } else {
+                $("span.not-num").find('span').prevObject.remove();
+            }
+            // $("span.not-num").find('span').prevObject.append(Count);
+        } else {
+            if (params.errors[0].errorCode !== "$APZ-SMS-EX-003") {
+                var lMsg = {
+                    "message": params.resFull.appzillonErrors[0].errorMessage
+                };
+                apz.dispMsg(lMsg);
+            } else {
+                apz.app.logout();
+            }
+        }
+    } else {
+        if (params.code === 'APZ-SVR-ERR') {
+            apz.XACBA.LandingPage.LaunchFirstPage();
+        }
+    }
+}
+apz.XACBA.LandingPage.NotifIntfCount = function() {
+    var request = {};
+    var params = {};
+    request = {};
+    request.cifid = apz.userExtId;
+    request.userid = apz.userId;
+    params.callBackObj = this;
+    params.appId = "XACBA";
+    params.buildReq = "N";
+    params.paintResp = "N";
+    params.req = request;
+    params.ifaceName = "notifycount";
+    params.async = false;
+    params.callBack = apz.XACBA.LandingPage.NotifIntfCountCB;
+    //apz.startLoader();
+    apz.server.callServer(params);
+}
+apz.XACBA.LandingPage.NotifIntfCountCB = function(params) {
+    // apz.startLoader();
+    //vinodha's changes for bypassing servercall
+    var filePath = apz.getDataFilesPath("XACBA") + "/notifyCount.json";
+    var content = apz.getFile(filePath);
+    if (!apz.isNull(content)) {
+        content = JSON.parse(content)
+    }
+    params.status = true;
+    params.res = content;
+    params.errors = "";
+    //vinodha's changes end.
+    if (params.status) {
+        if (!params.errors) {
+            if (params.res.XACBA__notifycount_Res.length > 0) {
+                var Count = params.res.XACBA__notifycount_Res[0]["COUNT(*)"];
+                apz.XACBA.LandingPage.NotifyCounts = Count;
+            }
+            $("span.not-num").find('span').prevObject.remove();
+            if (Count !== 0) {
+                $("#XACBA__LandingPage__notificationbtn").append("<span class='not-num notification-count'></span>");
+                $("#XACBA__LandingPage__notificationbtn").addClass("btn-notification");
+                $("span.not-num").find('span').prevObject.append(Count);
+            }
+        } else {
+            if (params.errors[0].errorCode !== "$APZ-SMS-EX-003") {
+                var lMsg = {
+                    "message": params.resFull.appzillonErrors[0].errorMessage
+                };
+                apz.dispMsg(lMsg);
+            } else {
+                apz.app.logout();
+            }
+        }
+        apz.stopLoader();
+        if (apz.deviceType === "WEB" && apz.deviceGroup !== "Phone") {
+            if (apz.XACBA.LandingPage.SPARAMS.screen === undefined) {
+                apz.XACBA.LandingPage.fnFetcPromotionImage();
+            }
+        } else {
+            if (apz.XACBA.LandingPage.SPARAMS.screen === undefined) {
+                apz.XACBA.LandingPage.customerNewRoleService();
+            }
+        }
+    } else {
+        if (params.code === 'APZ-SVR-ERR') {
+            apz.XACBA.LandingPage.LaunchFirstPage();
+        }
+    }
+}
+apz.XACBA.LandingPage.launchStage1 = function() {
+    apz.XACBA.LandingPage.fnServiceMenuLoad();
+}
+apz.XACBA.LandingPage.FnPaintIMG = function() {
+    apz.XACBA.LandingPage.setValTosrc();
+    apz.XACBA.LandingPage.fnCloseModalPromotionModel();
+}
+apz.XACBA.LandingPage.fnFetcPromotionImage = function() {
+    var PromotionImage = apz.retrieve("PromotionImage")
+    var n = 0;
+    apz.XACBA.LandingPage.PromImgDate = [];
+    apz.XACBA.LandingPage.PromImgURL = [];
+    $(PromotionImage).map(function(i, v) {
+        if (v.screenId === "Login-Modal") {
+            if (!apz.isNull(v.image) && ((apz.language).toUpperCase() === v.language)) {
+                apz.XACBA.LandingPage.PromImgDate[n] = v;
+                apz.XACBA.LandingPage.PromImgURL[n] = v.imageURL
+                n++;
+            }
+        }
+    })
+    if (apz.XACBA.LandingPage.PromImgDate.length > 1) {
+        apz.XACBA.LandingPage.FnPaintIMG();
+    } else if (apz.XACBA.LandingPage.PromImgDate.length == 1) {
+        apz.setElmValue('XACBA__PromotionIntftoPaint__o__XACBA__PromotionIntftoPaint_Res__image_0', apz.XACBA.LandingPage.PromImgDate[0].image);
+        apz.XACBA.LandingPage.fnCloseModalPromotionModel();
+    }
+    if (apz.XACBA.LandingPage.SPARAMS.screen === undefined) {
+        apz.XACBA.LandingPage.customerNewRoleService();
+    }
+}
+apz.XACBA.LandingPage.fnCloseModalPromotionModel = function() {
+    var toggleMod = {
+        "targetId": "XACBA__LandingPage__promotionModel"
+    }
+    apz.toggleModal(toggleMod);
+}
+apz.XACBA.LandingPage.fnSlider = function() {
+    var swiper = new Swiper('.swiper-container11', {
+        direction: 'vertical',
+        slidesPerView: 'auto',
+        loop: true,
+        spaceBetween: 30,
+        autoplay: 4000,
+        effect: 'fade',
+    });
+};
+apz.XACBA.LandingPage.onclick_fn = function(pthis) {
+    var rowno = pthis.id.slice(40);
+    if (apz.XACBA.LandingPage.PromImgURL[rowno] != "" && apz.XACBA.LandingPage.PromImgURL[rowno] != undefined) {
+        window.open(apz.XACBA.LandingPage.PromImgURL[rowno]);
+    }
+    apz.XACBA.LandingPage.setValTosrc();
+}
+apz.XACBA.LandingPage.fnClickprofileImg = function() {
+    /*$("#XACBA__LandingPage__myaccounts_row").addClass("sno");
+    $("#XACBA__LandingPage__quickLinks").addClass("sno");
+    $("#XACBA__LandingPage__header1").addClass("sno");
+    $("#XACBA__LandingPage__header2").removeClass("sno");*/
+    apz.XACBA.LandingPage.SPARAMS.fromdashboardtoprofile = "true";
+    apz.XACBA.LandingPage.fn_launchMicroApp("Profil", "profile", "XACBA__LandingPage__launchRow", apz.XACBA.LandingPage.SPARAMS, true);
+}
+apz.XACBA.LandingPage.fnLaunchAccountDetails = function(pthis) {
+    apz.XACBA.LandingPage.SPARAMS.screen = "Accounts";
+    scrstatus = true;
+    apz.XACBA.LandingPage.fromDashToAllAccounts = true;
+    apz.XACBA.LandingPage.fromDashRowNo = pthis.attributes.rowno.value
+    // screen = apz.lits['XACBA']['XAC_SCR_ACCOUNTS'];
+    //params = apz.XACBA.LandingPage.USEROBJ;
+    $("#" + LandingPageBaseId + "gr_row_26").addClass('sno');
+    apz.XACBA.LandingPage.accountDetails(apz.XACBA.LandingPage.fromDashRowNo, apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage
+        .fromDashRowNo].accType)
+}
+apz.XACBA.LandingPage.accountDetails = function(pthis, accType) {
+    selAccRow = pthis;
+    apz.XACBA.LandingPage.idindex = selAccRow;
+    accountTypeFornickname = accType;
+    if (apz.XACBA.LandingPage.fromDashToAllAccounts === true) {
+        if (accType === "CASA") {
+            apz.XACBA.LandingPage.interfaceName = "accListCASA";
+            apz.XACBA.LandingPage.SERVICETYPE = "CASA";
+            apz.XACBA.LandingPage.nodeName = "CASA";
+            apz.XACBA.LandingPage.imageName = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].imageName
+        }
+        if (accType === "TD") {
+            apz.XACBA.LandingPage.nodeName = "DEPOSIT";
+            apz.XACBA.LandingPage.interfaceName = "accListDeposit";
+            apz.XACBA.LandingPage.SERVICETYPE = "TD";
+            apz.XACBA.LandingPage.imageName = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].imageName
+        }
+        if (apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].accountType === "LOAN") {
+            apz.XACBA.LandingPage.SERVICETYPE = "LOAN";
+            apz.XACBA.LandingPage.interfaceName = "accListLoan";
+            apz.XACBA.LandingPage.nodeName = "LOAN";
+            apz.XACBA.LandingPage.ISLOANEXTEND = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].isExtend;
+            apz.XACBA.LandingPage.ISLOANDISBURSE = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].isDisburse;
+            apz.XACBA.LandingPage.imageName = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].imageName
+        }
+        if (accType === "DBL" || apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].accountType === "BLA") {
+            apz.XACBA.LandingPage.interfaceName = "accListDbla";
+            apz.XACBA.LandingPage.SERVICETYPE = "LOAN";
+            apz.XACBA.LandingPage.nodeName = "BLA";
+            apz.XACBA.LandingPage.imageName = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].imageName
+        }
+        if (accType === "Overdraft" || accType === "OD") {
+            apz.XACBA.LandingPage.SERVICETYPE = "OVERDRAFT";
+            apz.XACBA.LandingPage.interfaceName = "accListOverDraft";
+            apz.XACBA.LandingPage.nodeName = "OVERDRAFT";
+            apz.XACBA.LandingPage.imageName = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].imageName
+        }
+        apz.XACBA.LandingPage.branchId = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].branchId;
+        apz.XACBA.LandingPage.accountId = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].accId;
+        apz.XACBA.LandingPage.ACCTYPETYPE = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].accType;
+        apz.XACBA.LandingPage.CURR = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].currencyId;
+        apz.XACBA.LandingPage.ACCOUNTNAME = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].accname;
+        if (apz.language !== "en") {
+            apz.XACBA.LandingPage.NICKNAME = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].mangolianNickName
+        } else {
+            apz.XACBA.LandingPage.NICKNAME = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].acNickname
+        }
+        apz.XACBA.LandingPage.ISPRIM = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].isPrimaryAc;
+        apz.XACBA.LandingPage.ACCDESC = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].accDesc;
+        if (accType === "TD" || accType === "CASA") {
+            apz.XACBA.LandingPage.BAL = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].currentBalance;
+        } else {
+            apz.XACBA.LandingPage.BAL = apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].balnce
+        }
+    }
+    if (accType === "TD") {
+        if (apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].prodId === "AC1200" || apz.XACBA.LandingPage
+            .dashboardActiveAccounts[apz.XACBA.LandingPage.fromDashRowNo].prodId === "AC1000") {
+            apz.XACBA.LandingPage.nodeName = "CASA";
+            accountTypeFornickname = "CASA";
+            apz.XACBA.LandingPage.SERVICETYPE = "CASA";
+        }
+    }
+    var lreq = {
+        "getAccountDetails": {
+            "accNo": apz.XACBA.LandingPage.accountId,
+            "serviceType": apz.XACBA.LandingPage.SERVICETYPE,
+            "languageId": apz.language
+        }
+    };
+    var lServerParam = {
+        "ifaceName": "accDeatils",
+        "buildReq": "N",
+        "req": lreq,
+        "paintResp": "N",
+        "async": true,
+        "callBack": apz.XACBA.LandingPage.fnLaunchAccountDetailsCB
+    };
+    apz.startLoader();
+    setTimeout(function() {
+        apz.server.callServer(lServerParam);
+    }, 0);
+};
+apz.XACBA.LandingPage.fnLaunchAccountDetailsCB = function(params) {
+    accountNo = apz.XACBA.LandingPage.accountId;
+    accName = apz.XACBA.LandingPage.ACCOUNTNAME;
+    accNickName = apz.XACBA.LandingPage.NICKNAME;
+    accType = apz.XACBA.LandingPage.ACCDESC;
+    currencyType = apz.XACBA.LandingPage.CURR;
+    isPrimary = apz.XACBA.LandingPage.ISPRIM;
+    branchid = apz.XACBA.LandingPage.branchId;
+    balanceAmnt = apz.XACBA.LandingPage.BAL;
+    acctype = apz.XACBA.LandingPage.nodeName;
+    isLoanExtend = apz.XACBA.LandingPage.ISLOANEXTEND;
+    isLoanResDis = apz.XACBA.LandingPage.ISLOANDISBURSE;
+    var TdUseobj = {};
+    TdUseobj.ACCOUNT_NUMBER = apz.XACBA.LandingPage.accountId
+    TdUseobj.ACCOUNT_HOLDER_NAME = apz.XACBA.LandingPage.ACCOUNTNAME;
+    TdUseobj.NICKNAME = apz.XACBA.LandingPage.NICKNAME;
+    TdUseobj.ACCOUNT_TYPE = apz.XACBA.LandingPage.ACCDESC;
+    TdUseobj.CURRENCY = apz.XACBA.LandingPage.CURR;
+    TdUseobj.isPrimary = apz.XACBA.LandingPage.ISPRIM;
+    TdUseobj.branchid = apz.XACBA.LandingPage.branchId;
+    TdUseobj.BALANCE = apz.XACBA.LandingPage.BAL;
+    TdUseobj.rowNo = apz.XACBA.LandingPage.CurrencyRow;
+    TdUseobj.imageName = apz.XACBA.LandingPage.imageName;
+    apz.XACBA.LandingPage.fnActiveAccounnt(apz.XACBA.LandingPage.SPARAMS);
+    if (accountTypeFornickname === "CASA" || accountTypeFornickname === "CA, SA" || accountTypeFornickname === "OD" || accountTypeFornickname ===
+        "Overdraft") {
+        availbalance = apz.XACBA.LandingPage.BAL;
+        TdUseobj.availbalance = availbalance;
+    }
+    if (apz.XACBA.LandingPage.nodeName === "LOAN") {
+        TdUseobj.mortageloanFlag = false;
+        if (apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.idindex].prdGrpCode === "CL11") {
+            TdUseobj.posloanFlag = true;
+        } else if (apz.XACBA.LandingPage.dashboardActiveAccounts[apz.XACBA.LandingPage.idindex].prdGrpCode === "CL30" || apz.XACBA.LandingPage
+            .dashboardActiveAccounts[apz.XACBA.LandingPage.idindex].prdGrpCode === "CL20" || apz.XACBA.LandingPage.dashboardActiveAccounts[apz
+                .XACBA.LandingPage.idindex].prdGrpCode === "CL40") {
+            TdUseobj.mortageloanFlag = true;
+        } else {
+            TdUseobj.posloanFlag = false;
+            //  TdUseobj.mortageloanFlag = false;
+        }
+    } else {
+        TdUseobj.mortageloanFlag = false;
+        TdUseobj.posloanFlag = false;
+    }
+    TdUseobj.acctype = apz.XACBA.LandingPage.nodeName;
+    TdUseobj.fromaccdetails = true;
+    apz.XACBA.LandingPage.SPARAMS.Tduserparams = TdUseobj;
+    apz.XACBA.LandingPage.SPARAMS.Tdtopflag = true;
+    if (params.status && params.resFull.appzillonHeader.status) {
+        if (params.res.XACBA__accDeatils_Res.accountDetailsResp !== null) {
+            apz.XACBA.LandingPage.SPARAMS.accDetailsRes = params.res.XACBA__accDeatils_Res.accountDetailsResp
+            if (apz.XACBA.LandingPage.SERVICETYPE === "CASA") {
+                fromAccType = "CASA";
+            } else if (apz.XACBA.LandingPage.SERVICETYPE === "TD") {
+                fromAccType = "TD";
+            } else if (apz.XACBA.LandingPage.nodeName === "LOAN") {
+                fromAccType = "LOAN";
+            } else if (apz.XACBA.LandingPage.SERVICETYPE === "OVERDRAFT") {
+                fromAccType = "OVERDRAFT";
+            } else if (apz.XACBA.LandingPage.nodeName === "BLA") {
+                fromAccType = "BLA";
+            }
+            apz.XACBA.LandingPage.fnLaunchAccountDetail1("allacc", "AccountDetails", "XACBA__LandingPage__accountDetailsLunchRow", apz.XACBA
+                .LandingPage.SPARAMS);
+        } else {
+            apz.stopLoader();
+            if ((params.res.XACBA__accDeatils_Res.ResponseHeader.ResponseCode) !== "0") {
+                if (params.res.XACBA__accDeatils_Res.ResponseHeader.ErrorCode === "ERR_GENERIC" || params.res.XACBA__accDeatils_Res.ResponseHeader
+                    .ErrorCode === "SERVER_ERROR") {
+                    var msg1 = {};
+                    msg1.code = params.res.XACBA__accDeatils_Res.ResponseHeader.ErrorCode;
+                    if (apz.language === "en") {
+                        msg1.message = "Unable to process your request, please try after sometime.";
+                    } else {
+                        msg1.message = "Уучлаарай, aлдаа гарлаа. Түр хүлээгээд дахин хандана уу";
+                    }
+                    apz.dispMsg(msg1);
+                } else {
+                    var msg2 = {};
+                    msg2.code = params.res.XACBA__accDeatils_Res.ResponseHeader.ErrorCode;
+                    if (apz.language === "en") {
+                        msg2.message = params.res.XACBA__accDeatils_Res.ResponseHeader.ErrorMessage;
+                    } else {
+                        msg2.message = params.res.XACBA__accDeatils_Res.ResponseHeader.ErrorMessageMng
+                    }
+                    apz.dispMsg(msg2);
+                }
+            }
+        }
+    } else {
+        apz.stopLoader();
+        if (params.errors[0].errorCode !== "$APZ-SMS-EX-003") {
+            var lMsg = {
+                "message": params.resFull.appzillonErrors[0].errorMessage
+            };
+            apz.dispMsg(lMsg);
+        } else {
+            apz.app.logout();
+        }
+    }
+}
+apz.XACBA.LandingPage.dispmsg = function(errCode, errMsg, CB) {
+    var params = {
+        code: errCode,
+        args: errMsg,
+        callBackObj: this,
+        callBack: CB
+    };
+    apz.dispMsg(params);
+};
+apz.XACBA.LandingPage.fnLaunchAccountDetail1 = function(appId, ScrName, Div, sendUserObj) {
+    $("#" + apz.appId + "__LandingPage__accountDetailsLunchRow").removeClass("sno");
+    $("#" + apz.appId + "__LandingPage__accountDetailsLunchRow").empty();
+    sendUserObj.indexval = apz.XACBA.LandingPage.idindex;
+    scrStatus = true;
+    apz.XACBA.LandingPage.fn_launchMicroApp(appId, ScrName, apz.appId + "__LandingPage__launchRow", sendUserObj, scrStatus);
+};
+apz.XACBA.LandingPage.customerNewRoleService = function() {
+    apz.XACBA.LandingPage.populateEsignType();
+    //apz.XACBA.LandingPage.refactor2();
+}
+apz.XACBA.LandingPage.closeAllowBookModal = function() {
+    apz.toggleModal({
+        "targetId": "XACBA__LandingPage__allowBookModal"
+    });
+}
+apz.XACBA.LandingPage.setValTosrc = function() {
+    apz.data.scrdata.XACBA__PromotionIntftoPaint_Res = [];
+    apz.data.scrdata.XACBA__PromotionIntftoPaint_Res = apz.XACBA.LandingPage.PromImgDate;
+    apz.data.loadData("PromotionIntftoPaint", "XACBA");
+    $("#XACBA__LandingPage__promotionimglst").addClass("swiper-container11");
+    $("#XACBA__LandingPage__promotionimglst ul").removeClass("pri");
+    $("#XACBA__LandingPage__promotionimglst ul").addClass("swiper-wrapper");
+    $("#XACBA__LandingPage__promotionimglst ul > li").addClass("swiper-slide");
+    window.setTimeout(function() {
+        apz.XACBA.LandingPage.fnSlider();
+    }, 0);
+}
+apz.XACBA.LandingPage.noroleaccs = function() {
+    var msg = {
+        'code': 'XAC_INF_SCR_NOT_ALWD',
+        'callBack': ""
+    };
+    apz.dispMsg(msg);
+}
+apz.XACBA.LandingPage.LaunBtn = function() {
+    $("#" + LandingPageBaseId + "notificationbtn").addClass('sno');
+    $("#" + LandingPageBaseId + "notificationbtnIB").addClass('sno');
+    $("#" + LandingPageBaseId + "backButton").removeClass('sno');
+    $("#" + LandingPageBaseId + "logoutBtn").removeClass('sno');
+}
+apz.XACBA.LandingPage.handleBreadcrumb = function(pvalue) {
+    debugger;
+    if (pvalue == "home") {
+        apz.XACBA.LandingPage.fnSideMenu("Home");
+    } else if (pvalue == "accountlist") {
+        apz.XACBA.LandingPage.fnMenuNav("accounts", "", true);
+        $("#XACBA__LandingPage__accountsBreadcrumb li:nth-child(3),#XACBA__LandingPage__accountsBreadcrumb li:nth-child(4)").addClass("sno");
+    } else if (pvalue == "accountsummary") {
+        apz.XACBA.LandingPage.fnBackPressed();
+        $("#XACBA__LandingPage__accountsBreadcrumb li:nth-child(4)").addClass("sno");
+    }
+}
+
+//orientation flow 
+apz.XACBA.LandingPage.Rotate = function() {
+    debugger;
+    apz.XACBA.LandingPage.startOrientationListener();
+    apz.XACBA.LandingPage.setOrientation();
+    apz.XACBA.LandingPage.stopOrientation();
+};
+apz.XACBA.LandingPage.startOrientationListener = function() {
+    debugger;
+    var json = {};
+    json.id = "STARTORIENTATIONLSTNR";
+    json.callBack = apz.XACBA.LandingPage.startOrientationListenerCB;
+    apz.ns.startOrientationListener(json);
+}
+apz.XACBA.LandingPage.startOrientationListenerCB = function(params) {
+    debugger;
+    console.log(params);
+    var orn = params.orientation;
+    console.log(orn);
+    if (orn === 'PORTRAIT') {
+        rFlag = 'P'
+    } else if (orn === 'LANDSCAPE') {
+        rFlag = 'L'
+    }
+}
+apz.XACBA.LandingPage.setOrientation = function() {
+    debugger;
+    var rMode;
+    if (rFlag === 'P') {
+        rMode = "LANDSCAPE";
+        rFlag = 'L'
+    } else if (rFlag === 'L') {
+        rMode = "PORTRAIT";
+        rFlag = 'P'
+    }
+    var json = {};
+    json.id = "ORIENTATION";
+    json.callBack = apz.XACBA.LandingPage.setOrientationCB;
+    json.orientation = rMode;
+    apz.ns.setOrientation(json);
+}
+apz.XACBA.LandingPage.setOrientationCB = function(para) {
+    debugger;
+    console.log(para);
+    console.log("orientation set");
+}
+apz.XACBA.LandingPage.stopOrientation = function() {
+    var json = {};
+    json.id = "STOPORIENTATIONLSTNR";
+    json.callBack = apz.XACBA.LandingPage.stopOrientationCB;
+    apz.ns.stopOrientationListener(json);
+}
+apz.XACBA.LandingPage.stopOrientation = function(resp){
+    debugger;
+}
+//orientation flow ended
+apz.XACBA.LandingPage.gestureResponse = function(){
+    var json = {
+         "singletap": "Y",
+         "doubletap": "Y",
+         "tripletap": "Y",
+         "pinch": "Y",
+         "longpress": "Y",
+         "swipe": "Y"
+     }
+     json.id = "GESTURE_ID"; 
+     json.callBack = apz.XACBA.LandingPage.gestureResponseCB
+     apz.ns.startGesture(json);
+}
+
+apz.XACBA.LandingPage.gestureResponseCB = function(params){
+    eventName = params.event;
+     apz.XACBA.LandingPage.getResponse(eventName);
+}
+
+apz.XACBA.LandingPage.getResponse = function(params) {
+    var req = {
+        "fetchEventNameRequest": {
+            "eventName": params
+        }
+    }
+    var lParams = {
+        "ifaceName": "gestureConfig",
+        "appId": "XACBA",
+        "buildReq": "N",
+        "req": req,
+        "paintResp": "N",
+        "async": true,
+        "callBack": apz.XACBA.LandingPage.getResponseCB
+    };
+    apz.server.callServer(lParams);
+}
+apz.XACBA.LandingPage.getResponseCB = function(params) {
+    var eventAction = params.res.XACBA__gestureConfig_Res.Response[0].eventAction;
+    
+    if(eventAction === 'Home'){
+        apz.XACBA.LandingPage.directHome();
+    }
+    else if(eventAction === 'Accounts'){
+        apz.XACBA.LandingPage.fnMenuNav("accounts", "", true);
+    }
+    else if(eventAction === 'Cards'){
+        apz.XACBA.LandingPage.LaunBtn();
+        apz.XACBA.LandingPage.SPARAMS.Carddirect = false;
+        apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['XAC_CARDS'], apz.XACBA.LandingPage.USEROBJ, true);
+    }
+    else if(eventAction === 'Transfer'){
+        apz.XACBA.LandingPage.LaunBtn();
+        apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_DOMESTICTRANS'], apz.XACBA.LandingPage.USEROBJ, true);
+    }
+    else if(eventAction === 'Profile'){
+        apz.XACBA.LandingPage.fnClickprofileImg();
+    }
+     else if(eventAction === 'Bills'){
+    apz.XACBA.LandingPage.LaunBtn();
+    apz.XACBA.LandingPage.fnMenuNav(apz.lits['XACBA']['RB_MYBILL'], apz.XACBA.LandingPage.USEROBJ, true);
+
+    }
+    
+}

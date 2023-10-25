@@ -1,0 +1,1 @@
+{"typeclass":"DEVICEGROUPS","name":"devicegroups","type":"DEVICEGROUPS","devices":[{"name":"Phone","description":"Phone","width":"320","height":"480","os":"ALL","orientation":"PORTRAIT"},{"name":"Web","description":"Web","width":"1200","height":"800","os":"ALL","orientation":"ANY"},{"name":"IPAD","description":"IPAD","width":"768","height":"1024","os":"ALL","orientation":"ANY"}]}

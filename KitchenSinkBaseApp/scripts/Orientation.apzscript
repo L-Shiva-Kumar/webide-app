@@ -1,0 +1,44 @@
+
+var oldState;
+apz.app.onLoad_Orientation = function() {
+    debugger;
+    apz.setElmValue("XACBA__LandingPage__headerTitle","Orientation")
+      oldState = apz.retrieve("orientationState");
+      if (oldState === 'D'){
+        $("#XACBA__Orientation__el_btn_2").text("Disabled");
+    }   
+};
+
+apz.XACBA.Orientation = {};
+
+apz.XACBA.Orientation.EnableOrientation = function(pthis){
+    debugger;
+
+    if(apz.deviceType != 'WEB'){
+        var state = $("#XACBA__Orientation__el_btn_2").text();
+        if (state === 'Enabled'){
+            $("#XACBA__Orientation__el_btn_2").text("Disabled");
+            apz.store("orientationState","D");
+             $("#XACBA__LandingPage__el_btn_61").addClass("sno")
+             $("#XACBA__LandingPage__el_btn_63").addClass("sno")
+             apz.XACBA.Orientation.stopOrientation();
+             
+        } else if (state === 'Disabled'){
+            $("#XACBA__Orientation__el_btn_2").text("Enabled");
+            apz.store("orientationState","E");
+            $("#XACBA__LandingPage__el_btn_61").removeClass("sno")
+            $("#XACBA__LandingPage__el_btn_63").removeClass("sno")
+        }    
+    }
+}
+
+apz.XACBA.Orientation.stopOrientation = function(){
+        var json = {};
+    json.id = "STOPORIENTATIONLSTNR";
+    json.callBack = apz.XACBA.Orientation.stopOrientationCB;
+    apz.ns.stopOrientationListener(json);
+
+} 
+apz.XACBA.Orientation.stopOrientationCB = function(){
+    debugger;
+}

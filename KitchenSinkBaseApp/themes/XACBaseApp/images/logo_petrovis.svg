@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="40" height="40" viewBox="0 0 40 40">
+  <defs>
+    <clipPath id="clip-path">
+      <rect id="Rectangle_1265" data-name="Rectangle 1265" width="40" height="40"/>
+    </clipPath>
+  </defs>
+  <g id="a" clip-path="url(#clip-path)">
+    <circle id="Ellipse_26" data-name="Ellipse 26" cx="20" cy="20" r="20" fill="#fff"/>
+    <g id="Group_4523" data-name="Group 4523" transform="translate(0)">
+      <path id="Path_1724" data-name="Path 1724" d="M76.88,171.369a4.455,4.455,0,1,0,4.455-4.455,4.455,4.455,0,0,0-4.455,4.455" transform="translate(-61.341 -141.367)" fill="#ea2227" fill-rule="evenodd"/>
+      <path id="Path_1725" data-name="Path 1725" d="M70.687,121.655v14.909h0V139.7A1.4,1.4,0,0,0,71.814,141c.344.107.643.225.9.333l.067.034q.287.118.564.254l.118.062.236.13h0a9.091,9.091,0,1,1-8.783,0h0l.124-.074h.034l.113-.056.067-.039.118-.056.1-.045h0a3.583,3.583,0,0,1,.364-.153l.164-.079c.236-.1.507-.2.806-.294a1.388,1.388,0,0,0,1.127-1.309V121.65a20,20,0,1,0,2.768,0" transform="translate(-49.314 -121.65)" fill="#ea2227" fill-rule="evenodd"/>
+    </g>
+  </g>
+</svg>

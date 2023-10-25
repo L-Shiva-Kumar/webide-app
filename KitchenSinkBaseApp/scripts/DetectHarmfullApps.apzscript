@@ -1,0 +1,27 @@
+apz.app.onLoad_DetectHarmfullApps = function() {};
+
+apz.XACBA.DetectHarmfullApps = {};
+apz.XACBA.DetectHarmfullApps.scanApps = function() {
+    debugger;
+        var json = {};
+        json.id = "HARMFULAPPS_STATUS";
+        json.callBack = apz.XACBA.DetectHarmfullApps.detectHarmfulAppsCb;
+        apz.ns.detectHarmfulApps(json);
+};
+apz.XACBA.DetectHarmfullApps.detectHarmfulAppsCb = function(params) {
+    debugger;
+    console.log(params);
+    if (params.status === false) {
+          var lMsg = {
+        "code":"APZ-SCAN-SUCCES",
+        "lables": "Ok"
+    };
+    apz.dispMsg(lMsg);
+    } else {
+       var PMsg = {
+        "code":"APZ-SCAN-ERR",
+        "lables": "Ok"
+    };
+    apz.dispMsg(PMsg);
+    }
+}

@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "278245106485",
+    "firebase_url": "https://xacbankdev.firebaseio.com",
+    "project_id": "xacbankdev",
+    "storage_bucket": "xacbankdev.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:278245106485:android:88966e83ae50ba47d2627c",
+        "android_client_info": {
+          "package_name": "com.xacbank.mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "278245106485-142l4d6t5gh5669edv411qr55qop32oq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLUP02qkogj7EqumOsPccKMSZNh69kIo8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "278245106485-142l4d6t5gh5669edv411qr55qop32oq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

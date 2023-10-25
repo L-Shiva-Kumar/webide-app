@@ -1,0 +1,85 @@
+{
+    "quicklinks": [{
+        "Name": "Transfers",
+        "icon": "icon-quick-transfer"
+    }, {
+        "Name": "Bills",
+        "icon": "icon-quick-bills"
+    }, {
+        "Name": "QPay",
+        "icon": "icon-quick-qpay"
+    } ,{
+        "Name": "QR Code Generation",
+        "icon": "icon-quick-mobilecash"
+    }, {
+        "Name": "Cards",
+        "icon": "icon-quick-cards"
+    }],
+    "quicklinksMn": [{
+        "Name": "Гүйлгээ",
+        "icon": "icon-quick-transfer"
+    }, {
+        "Name": "Төлбөр",
+        "icon": "icon-quick-bills"
+    },{
+        "Name": "QPay",
+        "icon": "icon-quick-qpay"
+    }, {
+        "Name": "Mobile Cash",
+        "icon": "icon-quick-mobilecash"
+    },  {
+        "Name": "Карт",
+        "icon": "icon-quick-cards"
+    }],
+    "moreMenu": [{
+        "Name": "Services",
+        "icon": "icon-more-services"
+    }, {
+        "Name": "Calculator",
+        "icon": "icon-more-calculator"
+    }, {
+        "Name": "Budgets and goals",
+        "icon": "icon-more-budgets"
+    }, {
+        "Name": "Help, Contact us",
+        "icon": "icon-more-contact"
+    }, {
+        "Name": "Branch , ATM locations",
+        "icon": "icon-more-locate"
+    }, {
+        "Name": "Settings",
+        "icon": "icon-more-settings"
+    }, {
+        "Name": "Mailbox",
+        "icon": "icon-more-mailbox"
+    },{
+        "Name": "FAQ",
+        "icon": "icon-question-sign"
+    },{
+        "Name": "Download File",
+        "icon": "icon-download"
+    }
+    ],
+    "moreMenuMn": [{
+        "Name": "Нэмэлт үйлчилгээ",
+        "icon": "icon-more-services"
+    }, {
+        "Name": "Тооцоолуур",
+        "icon": "icon-more-calculator"
+    }, {
+        "Name": "Хувийн санхүү",
+        "icon": "icon-more-budgets"
+    }, {
+        "Name": "Холбоо барих",
+        "icon": "icon-more-contact"
+    }, {
+        "Name": "Байршил",
+        "icon": "icon-more-locate"
+    }, {
+        "Name": "Тохиргоо",
+        "icon": "icon-more-settings"
+    }, {
+        "Name": "Цахим шуудан",
+        "icon": "icon-more-mailbox"
+    }]
+}

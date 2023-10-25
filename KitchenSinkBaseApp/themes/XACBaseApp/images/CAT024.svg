@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36">
+  <g id="Transfer" transform="translate(-32 -1486)">
+    <g id="Ellipse_307" data-name="Ellipse 307" transform="translate(32 1486)" fill="none" stroke="#e7e8ed" stroke-width="1">
+      <circle cx="18" cy="18" r="18" stroke="none"/>
+      <circle cx="18" cy="18" r="17.5" fill="none"/>
+    </g>
+    <g id="transfer-2" data-name="transfer" transform="translate(38 1492.002)">
+      <path id="Path_9076" data-name="Path 9076" d="M5.233,12.794l-5-4.75a.752.752,0,0,1,0-1.088l5-4.75A.751.751,0,0,1,6.5,2.75V5h9.25A1.252,1.252,0,0,1,17,6.25v2.5A1.252,1.252,0,0,1,15.75,10H6.5v2.25A.751.751,0,0,1,5.233,12.794Z" fill="#2196f3"/>
+      <path id="Path_9077" data-name="Path 9077" d="M17,7.5H0a.75.75,0,0,0,.233.544l5,4.75A.739.739,0,0,0,5.744,13a.749.749,0,0,0,.756-.75V10h9.25A1.252,1.252,0,0,0,17,8.75Z" fill="#1d83d4"/>
+      <path id="Path_9078" data-name="Path 9078" d="M17.5,21.25V19H8.25A1.252,1.252,0,0,1,7,17.75v-2.5A1.252,1.252,0,0,1,8.25,14H17.5V11.75a.751.751,0,0,1,1.267-.544l5,4.75a.752.752,0,0,1,0,1.088l-5,4.75A.751.751,0,0,1,17.5,21.25Z" fill="#2196f3"/>
+      <path id="Path_9079" data-name="Path 9079" d="M24,16.5H7v1.25A1.252,1.252,0,0,0,8.25,19H17.5v2.25a.749.749,0,0,0,.756.75.735.735,0,0,0,.51-.206l5-4.75A.747.747,0,0,0,24,16.5Z" fill="#1d83d4"/>
+    </g>
+  </g>
+</svg>

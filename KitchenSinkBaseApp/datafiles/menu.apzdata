@@ -1,0 +1,85 @@
+{
+    "serviceMenu": [{
+        "menuItem": "Accounts",
+        "Img": "icon-all_accounts"
+    }, {
+        "menuItem": "Transfers",
+        "Img": "icon-transfers"
+    }, {
+        "menuItem": "Bill Payments",
+        "Img": "icon-payments"
+    }, {
+        "menuItem": "Cards",
+        "Img": "icon-menu-cards"
+    }, {
+        "menuItem": "Services",
+        "Img": "icon-menu-services"
+    },{
+        "menuItem": "Open Account",
+        "Img": "icon-menu-apply"
+    }, {
+        "menuItem": "Spend Analyser",
+        "Img": "icon-spend_analyser"
+    }, {
+        "menuItem": "Settings",
+        "Img": "icon-settings_ac"
+    }, {
+        "menuItem": "Others",
+        "Img": "icon-menu-others"
+    }, {
+        "menuItem": "Contact Us",
+        "Img": "icon-menu-loyalty"
+    },{
+        "menuItem": "QPay",
+        "Img": "icon-bank-scan-menu"
+    }],
+    "transferMenu": [{
+        "menuItem": "Domestic Transfer"
+    }, {
+        "menuItem": "International Transfer"
+    }, {
+        "menuItem": "Standing Instruction"
+    }, {
+        "menuItem": "Saved Transactions"
+    }, {
+        "menuItem": "Manage Beneficiary"
+    }],
+    "serviceRequestMenu": [{
+        "menuItem": "Reference Letter"
+    }, {
+        "menuItem": "Receipt"
+    }, {
+        "menuItem": "Alert & Notification"
+    }, {
+        "menuItem": "Tracking"
+    }],
+    "settingsMenu": [{
+        "menuItem": "Profile"
+    }, {
+        "menuItem": "Language"
+    }, {
+        "menuItem": "Manage Accounts"
+    }, {
+        "menuItem": "Generate CAM"
+    }, {
+        "menuItem": "Change Password"
+    }, {
+        "menuItem": "Manage Limit"
+    }, {
+        "menuItem": "Quick Access Menu"
+    },{
+        "menuItem": "Create Transaction Code"
+    }],
+    "othersMenu": [{
+        "menuItem": "Calculator"
+    }, {
+        "menuItem": "Locations"
+    }, {
+        "menuItem": "Loyalty"
+    }],
+    "qpayMenu": [{
+        "menuItem": "Qpay Settings"
+    }, {
+        "menuItem": "Payment History"
+    }]
+}

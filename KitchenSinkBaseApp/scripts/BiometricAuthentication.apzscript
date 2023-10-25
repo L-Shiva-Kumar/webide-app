@@ -1,0 +1,55 @@
+apz.XACBA.BiometricAuthentication = {};
+var biometricVal = "";
+var value;
+apz.app.onLoad_BiometricAutthentication = function() {};
+apz.XACBA.BiometricAuthentication.fnGetBiometricAuth = function() {
+    debugger;
+    var req = {};
+    value = apz.getElmValue("XACBA__BiometricAuthentication__biometricButton");
+    if (value === "One") {
+        biometricVal = "on";
+    } else {
+        biometricVal = "off";
+    }
+    //apz.XACBA.BiometricAuthentication.fnStoreBiometricAuth(biometricVal);
+    apz.XACBA.BiometricAuthentication.fnStoreUserCredentials();
+}
+apz.XACBA.BiometricAuthentication.fnStoreBiometricAuth = function(pValue) {
+    debugger;
+    var params = {};
+    params.id = "BIOMETRIC_STORE_ID";
+    params.callBack = apz.XACBA.BiometricAuthentication.fnStoreBiometricCallback;
+    params.key = "BIOMETRIC";
+    params.value = pValue;
+    params.promptBiometric = "N";
+    apz.ns.storeSecurely(params);
+}
+apz.XACBA.BiometricAuthentication.fnStoreBiometricCallback = function(params) {
+    debugger;
+    if (biometricVal == "on") {
+        apz.XACBA.BiometricAuthentication.fnStoreUserCredentials();
+    }
+}
+apz.XACBA.BiometricAuthentication.fnStoreUserCredentials = function() {
+    debugger;
+    var params = {};
+    params.id = "BIOMETRIC_STORE_ID";
+    params.callBack = apz.XACBA.BiometricAuthentication.fnStoreUserCredentialsCallback;
+    params.userId = "Vinodha";
+    params.password = "Vinodha@123";
+    apz.ns.storeCredentialSecurely(params);
+}
+apz.XACBA.BiometricAuthentication.fnStoreUserCredentialsCallback = function(params) {
+    debugger;
+    if (value === "One") {
+        var lMsg = {
+            "code": 'BIOMETRIC-ENABLE'
+        };
+        apz.dispMsg(lMsg);
+    } else if(value === "Two"){
+        var lMsg = {
+            "code": 'BIOMETRIC-DISABLE'
+        };
+        apz.dispMsg(lMsg);
+    }
+}

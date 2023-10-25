@@ -1,0 +1,85 @@
+{
+    "serviceMenu": [{
+        "menuItem": "Данс",
+        "Img"     : "icon-all_accounts"
+    }, {
+        "menuItem": "Гүйлгээ",
+        "Img"     : "icon-transfers"
+    }, {
+        "menuItem": "Төлбөр",
+        "Img": "icon-payments"
+    }, {
+        "menuItem": "Карт",
+        "Img": "icon-menu-cards"
+    }, {
+        "menuItem": "Үйлчилгээ",
+        "Img": "icon-menu-services"
+    }, {
+        "menuItem": "Данс нээх",
+        "Img": "icon-menu-apply"
+    }, {
+        "menuItem": "Хувийн санхүү",
+        "Img"     : "icon-spend_analyser"
+    }, {
+        "menuItem": "Тохиргоо",
+        "Img"     : "icon-settings_ac"
+    }, {
+        "menuItem": "Бусад",
+        "Img": "icon-menu-others"
+    }, {
+        "menuItem": "Холбоо барих",
+        "Img"     : "icon-menu-loyalty"
+    },{
+        "menuItem": "QPay",
+        "Img": "icon-bank-scan-menu"
+    }],
+    "transferMenu": [{
+        "menuItem": "Дотоод шилжүүлэг"
+    }, {
+        "menuItem": "Гадаад гуйвуулга"
+    }, {
+        "menuItem": "Захиалгат гүйлгээ"
+    }, {
+        "menuItem": "Загвар гүйлгээ"
+    }, {
+        "menuItem": "Дансны дэвтэр"
+    }],
+    "serviceRequestMenu": [{
+        "menuItem": "Дансны тодорхойлолт"
+    }, {
+        "menuItem": "Гүйлгээний баримт"
+    }, {
+        "menuItem": "XacИнфо үйлчилгээ"
+    }, {
+        "menuItem": "Хандалтын түүх"
+    }],	
+    "settingsMenu": [{
+        "menuItem": "Хувийн мэдээлэл"
+    }, {
+        "menuItem": "Хэлний тохиргоо"
+    }, {
+        "menuItem": "Дансны удирдлага"
+    }, {
+        "menuItem": "Төвлөрсөн хаягийн бүртгэл"
+    }, {
+        "menuItem": "Нууц үгийн тохиргоо"
+    }, {
+        "menuItem": "Лимит тохиргоо"
+    }, {
+        "menuItem": "Шуурхай цэс"
+    },{
+        "menuItem": "Гүйлгээний код үүсгэх"
+    }],	
+    "othersMenu": [{
+        "menuItem": "тооцоолуур"
+    }, {
+        "menuItem": "Салбар нэгж, АТМ"
+    }, {
+        "menuItem": "Лоялти"
+    }],
+     "qpayMenu": [{
+        "menuItem": "Qpay Settings"
+    }, {
+        "menuItem": "Payment History"
+    }]
+}
